@@ -42,6 +42,21 @@ async def post_to_gallery(bot: Bot, image, caption: str = "") -> int | None:
 
 async def post_review(bot: Bot, review: dict, print_name: str = "") -> int | None:
     text = format_review_card(review, print_name)
+    photo_url = review.get("photo_url", "")
+    
+    if photo_url:
+        # Post review with customer's photo
+        photo = await _resolve_image(photo_url)
+        if photo:
+            photo = resize_for_telegram(photo)
+            msg = await bot.send_photo(
+                chat_id=settings.MAIN_GROUP,
+                message_thread_id=settings.TOPIC_REVIEWS,
+                photo=photo, caption=text, parse_mode="HTML",
+            )
+            return msg.message_id
+    
+    # Text-only review (no photo)
     msg = await bot.send_message(
         chat_id=settings.MAIN_GROUP,
         message_thread_id=settings.TOPIC_REVIEWS,
