@@ -71,7 +71,7 @@ async def post_tip(bot: Bot, tip: dict) -> int | None:
 
 
 async def post_potd(bot: Bot, print_data: dict, avg_rating=None) -> int | None:
-    caption = "\ud83c\udf1f <b>Print of the Day!</b> \ud83c\udf1f\n\n" + format_print_card(print_data, avg_rating)
+    caption = "🌟 <b>Print of the Day!</b> 🌟\n\n" + format_print_card(print_data, avg_rating)
     photo = await _resolve_image(print_data.get("image_path"))
     if photo:
         photo = resize_for_telegram(photo)
