@@ -43,7 +43,7 @@ async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
         buf = load_image_from_path(img_path)
         if buf:
             filename = Path(img_path).stem.replace("_", " ").replace("-", " ").title()
-            await post_to_gallery(context.bot, buf, caption=f"\ud83d\udcf8 {filename}")
+            await post_to_gallery(context.bot, buf, caption=f"📸 {filename}")
             mark_as_posted(folder, Path(img_path).name)
 
 
