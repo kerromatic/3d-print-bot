@@ -1,4 +1,4 @@
-"""3D Print Hub — Telegram Bot Entry Point."""
+"""3D Print Hub â Telegram Bot Entry Point."""
 
 import logging
 from telegram.ext import (
@@ -17,7 +17,6 @@ from bot.handlers import (
     newprint_command,
     postimage_command,
     review_command,
-    search_command,
     request_command,
     catalog_command,
     orderstatus_command,
@@ -62,7 +61,7 @@ def main():
     if issues:
         for issue in issues:
             logger.error("Config issue: %s", issue)
-        print("\n⚠️  Fix the issues above in config/.env before running the bot.\n")
+        print("\nâ ï¸  Fix the issues above in config/.env before running the bot.\n")
         return
 
     app = (
@@ -78,7 +77,6 @@ def main():
     app.add_handler(CommandHandler("newprint", newprint_command))
     app.add_handler(CommandHandler("postimage", postimage_command))
     app.add_handler(CommandHandler("review", review_command))
-    app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("request", request_command))
     app.add_handler(CommandHandler("catalog", catalog_command))
     app.add_handler(CommandHandler("orderstatus", orderstatus_command))
@@ -95,7 +93,7 @@ def main():
         MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_member)
     )
 
-    logger.info("🖨️ 3D Print Hub Bot starting...")
+    logger.info("ð¨ï¸ 3D Print Hub Bot starting...")
     app.run_polling(drop_pending_updates=True)
 
 
