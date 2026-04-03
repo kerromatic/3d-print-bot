@@ -134,47 +134,79 @@ async def postimage_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Submit a review with optional photo.
+    Usage: /review <print_id> <1-5> <review text>
+    Can attach a photo or reply to a photo to include it with the review.
+    """
     if len(context.args) < 3:
-        await update.message.reply_text("Usage: <code>/review &lt;print_id&gt; &lt;1-5&gt; &lt;your review&gt;</code>", parse_mode="HTML")
+        await update.message.reply_text(
+            "Usage: <code>/review &lt;print_id&gt; &lt;1-5&gt; &lt;your review&gt;</code>\n\n"
+            "You can also attach a photo or reply to a photo to include it!",
+            parse_mode="HTML",
+        )
         return
+
     db = context.bot_data["db"]
     try:
         print_id = int(context.args[0])
         rating = int(context.args[1])
     except ValueError:
-        await update.message.reply_text("Print ID and rating must be numbers.")
+        await update.message.reply_text("print_id and rating must be numbers.")
         return
+
     if not 1 <= rating <= 5:
         await update.message.reply_text("Rating must be between 1 and 5.")
         return
-    print_data = await db.get_print(print_id)
-    if not print_data:
-        await update.message.reply_text(f"Print #{print_id} not found.")
-        return
+
     review_text = " ".join(context.args[2:])
     user = update.effective_user
-    await db.add_review(print_id=print_id, user_id=user.id, username=user.username or user.full_name, rating=rating, text=review_text)
-    review_data = {"rating": rating, "text": review_text, "username": user.username or user.full_name}
+
+    # Check if the print exists
+    print_data = await db.get_print(print_id)
+    if not print_data:
+        await update.message.reply_text(f"Print #{print_id} not found. Use /catalog to see available prints.")
+        return
+
+    # Check for photo - attached directly or replied to
+    photo_url = ""
+    if update.message.photo:
+        photo = update.message.photo[-1]
+        file = await context.bot.get_file(photo.file_id)
+        photo_url = file.file_path
+    elif update.message.reply_to_message and update.message.reply_to_message.photo:
+        photo = update.message.reply_to_message.photo[-1]
+        file = await context.bot.get_file(photo.file_id)
+        photo_url = file.file_path
+
+    # Save review to DB
+    review_id = await db.add_review(
+        print_id=print_id,
+        user_id=user.id,
+        username=user.username or "",
+        rating=rating,
+        text=review_text,
+        photo_url=photo_url,
+    )
+
+    await db._increment_user_stat(user.id, user.username or "", "reviews_given")
+
+    review_data = {
+        "rating": rating,
+        "text": review_text,
+        "username": user.username or user.first_name,
+        "photo_url": photo_url,
+    }
+
+    # Post to reviews topic (with photo if available)
     await post_review(context.bot, review_data, print_data["name"])
-    await update.message.reply_text(f"✅ Review submitted! {star_rating(rating)} for <b>{print_data['name']}</b>", parse_mode="HTML")
 
+    photo_note = " (with photo!)" if photo_url else ""
+    await update.message.reply_text(
+        f"\u2705 Review posted for <b>{print_data['name']}</b>{photo_note}\n"
+        f"{star_rating(rating)} ({rating}/5)",
+        parse_mode="HTML",
+    )
 
-async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("Usage: /search <keyword>")
-        return
-    db = context.bot_data["db"]
-    keyword = " ".join(context.args)
-    results = await db.search_prints(keyword)
-    if not results:
-        await update.message.reply_text(f'No prints found for "{keyword}".')
-        return
-    lines = [f'🔍 <b>Results for "{keyword}"</b>\n']
-    for p in results[:10]:
-        avg = await db.get_average_rating(p["id"])
-        rating_str = f" \u2014 {star_rating(round(avg))}" if avg else ""
-        lines.append(f"\u2022 <b>#{p['id']}</b> {p['name']}{rating_str}")
-    await _reply_privately(update, context, "\n".join(lines))
 
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
