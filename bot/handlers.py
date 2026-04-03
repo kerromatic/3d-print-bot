@@ -196,7 +196,8 @@ async def poll_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(parts) < 3:
         await update.message.reply_text("Usage: <code>/poll Question | Option1 | Option2 | ...</code>", parse_mode="HTML")
         return
-    await context.bot.send_poll(chat_id=settings.CHANNEL_POLLS, question=parts[0], options=parts[1:], is_anonymous=False)
+    await context.bot.send_poll(chat_id=settings.MAIN_GROUP,
+            message_thread_id=settings.TOPIC_POLLS, question=parts[0], options=parts[1:], is_anonymous=False)
     await update.message.reply_text("\u2705 Poll posted!")
 
 
