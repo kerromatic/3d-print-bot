@@ -66,7 +66,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<b>Everyone:</b>\n"
         "/start \u2014 Welcome & channel info\n"
         "/help \u2014 This message\n"
-        "/tip \u2014 Random 3D printing tip\n"
+        "/catalog \u2014 Browse available prints\n"
+        "/orderstatus \u2014 Check your order status\n"
+        "/materials \u2014 Material options explained\n"
+        "/pricing \u2014 Pricing guide & quotes\n"
+        "/faq \u2014 Frequently asked questions\n"
         "/search &lt;keyword&gt; \u2014 Search prints\n"
         "/review &lt;print_id&gt; &lt;1-5&gt; &lt;text&gt; \u2014 Submit a review\n"
         "/request &lt;description&gt; \u2014 Request a print\n"
@@ -186,12 +190,101 @@ async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Request <b>#{req_id}</b> posted!", parse_mode="HTML")
 
 
-async def tip_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not TIPS:
-        await update.message.reply_text("No tips loaded.")
-        return
-    tip = random.choice(TIPS)
-    await _reply_privately(update, context, format_tip(tip))
+async def catalog_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Browse available prints in the catalog."""
+    db = context.bot_data["db"]
+    prints = await db.get_recent_prints(limit=10)
+    if not prints:
+        text = ("\ud83d\udcda <b>Our Catalog</b>\n\n"
+            "No prints in the catalog yet! Check back soon.\n\n"
+            "Want something custom? Just DM us with your idea!")
+    else:
+        lines = ["\ud83d\udcda <b>Our Catalog</b>\n"]
+        for p in prints:
+            rating_str = ""
+            if p.get("avg_rating"):
+                rating_str = f" \u2b50 {p['avg_rating']}/5"
+            lines.append(f"\u2022 <b>#{p['id']}</b> \u2014 {p['name']}{rating_str}")
+        lines.append("\n\ud83d\udcac To order, DM us with the print # or your custom idea!")
+        lines.append("\ud83d\udd0d Use /search <keyword> to find specific prints")
+        text = "\n".join(lines)
+    await _reply_privately(update, context, text)
+
+
+async def orderstatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Check on a print request/order status."""
+    db = context.bot_data["db"]
+    user = update.effective_user
+    requests = await db.get_user_requests(user.id)
+    if not requests:
+        text = ("\ud83d\udce6 <b>Order Status</b>\n\n"
+            "You don't have any active orders.\n\n"
+            "To place an order:\n"
+            "1. Browse our /catalog\n"
+            "2. DM us with what you want\n"
+            "3. Use /request <description> to submit a print request")
+    else:
+        lines = ["\ud83d\udce6 <b>Your Orders</b>\n"]
+        status_emoji = {"open": "\ud83d\udfe2", "claimed": "\ud83d\udfe1", "fulfilled": "\u2705"}
+        for r in requests:
+            emoji = status_emoji.get(r["status"], "\u2753")
+            lines.append(f"{emoji} <b>#{r['id']}</b> \u2014 {r['description'][:50]}\nStatus: <b>{r['status'].title()}</b>")
+        text = "\n".join(lines)
+    await _reply_privately(update, context, text)
+
+
+async def materials_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Explain available printing materials."""
+    text = ("\ud83e\uddf5 <b>Materials We Print With</b>\n\n"
+        "<b>PLA (Most Popular)</b>\n"
+        "Great for display pieces, figurines, and decorative items. Smooth finish, wide color range. Not heat-resistant.\n\n"
+        "<b>PETG (Durable)</b>\n"
+        "Stronger and more flexible than PLA. Good for functional parts, phone cases, and items that need to withstand stress.\n\n"
+        "<b>TPU (Flexible)</b>\n"
+        "Rubber-like and bendable. Perfect for phone cases, grips, gaskets, and anything that needs to flex.\n\n"
+        "<b>Specialty Materials</b>\n"
+        "We also work with carbon fiber, wood-fill, silk, and glow-in-the-dark filaments. Ask us about availability!\n\n"
+        "\ud83d\udcac Not sure which material is right? DM us and we'll recommend the best option.")
+    await _reply_privately(update, context, text)
+
+
+async def pricing_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show pricing information."""
+    text = ("\ud83d\udcb0 <b>Pricing Guide</b>\n\n"
+        "Every print is unique, so pricing depends on:\n"
+        "\u2022 <b>Size</b> \u2014 how big is the print\n"
+        "\u2022 <b>Material</b> \u2014 PLA, PETG, TPU, specialty\n"
+        "\u2022 <b>Complexity</b> \u2014 detail level and supports needed\n"
+        "\u2022 <b>Quantity</b> \u2014 bulk orders get discounts\n\n"
+        "<b>General ranges:</b>\n"
+        "\u2022 Small items (keychains, minis): $5\u2013$15\n"
+        "\u2022 Medium items (phone cases, tools): $15\u2013$40\n"
+        "\u2022 Large items (helmets, decor): $40\u2013$100+\n"
+        "\u2022 Custom/complex projects: quote-based\n\n"
+        "\ud83d\udce9 <b>Get a quote:</b> DM us with your idea or STL file and we'll give you an exact price within 24 hours.\n\n"
+        "\u23f0 <b>Turnaround:</b> 3\u20137 business days for most orders")
+    await _reply_privately(update, context, text)
+
+
+async def faq_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Frequently asked questions for customers."""
+    text = ("\u2753 <b>Frequently Asked Questions</b>\n\n"
+        "<b>How do I place an order?</b>\n"
+        "DM us here on Telegram with what you want. You can send a description, a photo, or an STL file.\n\n"
+        "<b>What file formats do you accept?</b>\n"
+        "STL, OBJ, and 3MF files. If you don't have a 3D file, just describe what you want and we can help find or design it.\n\n"
+        "<b>How long does it take?</b>\n"
+        "Most orders are completed in 3\u20137 business days. Complex or large prints may take longer.\n\n"
+        "<b>Can I choose the color?</b>\n"
+        "Yes! We have a wide range of colors. Ask us what's currently in stock or check /materials.\n\n"
+        "<b>Do you ship?</b>\n"
+        "DM us for shipping options and rates.\n\n"
+        "<b>What if my print has issues?</b>\n"
+        "We stand behind our work. If there's a quality issue, DM us with a photo and we'll make it right.\n\n"
+        "<b>Can I get a custom design?</b>\n"
+        "Absolutely! DM us with your idea and we'll discuss options and pricing.")
+    await _reply_privately(update, context, text)
+
 
 
 async def leaderboard_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
