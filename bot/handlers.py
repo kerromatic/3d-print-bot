@@ -15,6 +15,42 @@ from bot.posting import post_new_print, post_to_gallery, post_review, post_reque
 
 
 
+
+import time
+from collections import defaultdict
+
+# Anti-spam: rate limiting per user
+_user_cooldowns = {}  # user_id -> last_command_timestamp
+_user_request_counts = defaultdict(list)  # user_id -> [timestamps]
+_user_review_counts = defaultdict(list)  # user_id -> [timestamps]
+
+COOLDOWN_SECONDS = 60
+MAX_REQUESTS_PER_DAY = 3
+MAX_REVIEWS_PER_DAY = 5
+
+
+def _check_cooldown(user_id: int) -> str | None:
+    """Check if user is sending commands too fast. Returns error message or None."""
+    now = time.time()
+    last = _user_cooldowns.get(user_id, 0)
+    if now - last < COOLDOWN_SECONDS:
+        remaining = int(COOLDOWN_SECONDS - (now - last))
+        return f"Please wait {remaining} seconds before using this command again."
+    _user_cooldowns[user_id] = now
+    return None
+
+
+def _check_rate_limit(user_id: int, counter: dict, max_per_day: int, label: str) -> str | None:
+    """Check daily rate limit. Returns error message or None."""
+    now = time.time()
+    day_ago = now - 86400
+    # Clean old entries
+    counter[user_id] = [t for t in counter[user_id] if t > day_ago]
+    if len(counter[user_id]) >= max_per_day:
+        return f"You've reached the daily limit of {max_per_day} {label}. Try again tomorrow."
+    counter[user_id].append(now)
+    return None
+
 async def _reply_privately(update, context, text, parse_mode="HTML"):
     """Send response as a DM to the user, with a short note in the group."""
     user = update.effective_user
@@ -138,7 +174,18 @@ async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Usage: /review <print_id> <1-5> <review text>
     Can attach a photo or reply to a photo to include it with the review.
     """
-    if len(context.args) < 3:
+        # Anti-spam checks
+    user = update.effective_user
+    cooldown_msg = _check_cooldown(user.id)
+    if cooldown_msg:
+        await update.message.reply_text(cooldown_msg)
+        return
+    rate_msg = _check_rate_limit(user.id, _user_review_counts, MAX_REVIEWS_PER_DAY, "reviews")
+    if rate_msg:
+        await update.message.reply_text(rate_msg)
+        return
+
+if len(context.args) < 3:
         await update.message.reply_text(
             "Usage: <code>/review &lt;print_id&gt; &lt;1-5&gt; &lt;your review&gt;</code>\n\n"
             "You can also attach a photo or reply to a photo to include it!",
@@ -210,7 +257,18 @@ async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
+        # Anti-spam checks
+    user = update.effective_user
+    cooldown_msg = _check_cooldown(user.id)
+    if cooldown_msg:
+        await update.message.reply_text(cooldown_msg)
+        return
+    rate_msg = _check_rate_limit(user.id, _user_request_counts, MAX_REQUESTS_PER_DAY, "requests")
+    if rate_msg:
+        await update.message.reply_text(rate_msg)
+        return
+
+if not context.args:
         await update.message.reply_text("Usage: /request <describe what you need printed>")
         return
     db = context.bot_data["db"]
