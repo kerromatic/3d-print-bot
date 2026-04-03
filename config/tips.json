@@ -1,0 +1,19 @@
+{
+  "tips": [
+    {"title": "First Layer Adhesion", "text": "Clean your bed with IPA before every print. Oils from fingers are the #1 cause of first-layer adhesion failures.", "tags": ["beginner", "bed-adhesion"]},
+    {"title": "Stringing Fix", "text": "Reduce retraction to 0.8-1.2mm for direct drive, 4-6mm for Bowden. Also try lowering nozzle temp by 5C.", "tags": ["troubleshooting", "stringing"]},
+    {"title": "PLA Storage", "text": "Store PLA in airtight containers with silica gel. Moisture causes popping, stringing, and weak adhesion.", "tags": ["materials", "storage"]},
+    {"title": "PETG Bed Temp", "text": "PETG loves 75-85C bed temp. Use glue stick as release agent - PETG can bond TOO well to glass.", "tags": ["materials", "PETG"]},
+    {"title": "Calibration Cube", "text": "Print a 20mm cal cube regularly. Measure with calipers - if not 20.0mm, adjust steps/mm.", "tags": ["calibration", "beginner"]},
+    {"title": "Support Removal", "text": "Set support Z-distance to 0.2mm for easy removal. Tree supports often give cleaner results.", "tags": ["supports", "slicing"]},
+    {"title": "Speed vs Quality", "text": "For detail: 30-40mm/s. For functional: 80-120mm/s. Input shaper lets you push speed without ringing.", "tags": ["speed", "quality"]},
+    {"title": "Nozzle Maintenance", "text": "Cold pull weekly: heat to 200C, push filament, cool to 90C, pull. The blob brings out debris.", "tags": ["maintenance", "nozzle"]},
+    {"title": "Layer Height Rule", "text": "Max layer height = 75% of nozzle diameter. For 0.4mm nozzle, thats 0.3mm max.", "tags": ["beginner", "slicing"]},
+    {"title": "Bridging Tips", "text": "Better bridges: fan 100%, bridge flow 90-95%, bridge speed 15-20mm/s.", "tags": ["advanced", "bridging"]},
+    {"title": "TPU Printing", "text": "Print TPU at 20-30mm/s, no retraction on Bowden. Direct drive handles TPU much better.", "tags": ["materials", "TPU"]},
+    {"title": "Enclosure Benefits", "text": "An enclosure stabilizes ambient temp for all materials, reducing warping. Even a cardboard box helps!", "tags": ["hardware", "enclosure"]},
+    {"title": "Ironing for Smooth Tops", "text": "Enable Ironing: flow 10-15%, speed 20mm/s. Great for name plates and flat-top models.", "tags": ["slicing", "quality"]},
+    {"title": "Bed Leveling Frequency", "text": "Even with ABL, re-run mesh probe every few weeks. Beds shift, especially on moved printers.", "tags": ["calibration", "maintenance"]},
+    {"title": "Filament Runout", "text": "No runout sensor? Weigh your spool. A nearly-empty 1kg spool with holder weighs about 250g.", "tags": ["beginner", "tips"]}
+  ]
+}
