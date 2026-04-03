@@ -30,7 +30,9 @@ MAX_REVIEWS_PER_DAY = 5
 
 
 def _check_cooldown(user_id: int) -> str | None:
-    """Check if user is sending commands too fast. Returns error message or None."""
+    """Check if user is sending commands too fast. Returns error message or None. Admins bypass."""
+    if settings.is_admin(user_id):
+        return None
     now = time.time()
     last = _user_cooldowns.get(user_id, 0)
     if now - last < COOLDOWN_SECONDS:
@@ -41,7 +43,9 @@ def _check_cooldown(user_id: int) -> str | None:
 
 
 def _check_rate_limit(user_id: int, counter: dict, max_per_day: int, label: str) -> str | None:
-    """Check daily rate limit. Returns error message or None."""
+    """Check daily rate limit. Returns error message or None. Admins bypass."""
+    if settings.is_admin(user_id):
+        return None
     now = time.time()
     day_ago = now - 86400
     # Clean old entries
