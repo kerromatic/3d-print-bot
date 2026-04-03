@@ -13,6 +13,28 @@ from utils.helpers import (
 )
 from bot.posting import post_new_print, post_to_gallery, post_review, post_request
 
+
+
+async def _reply_privately(update, context, text, parse_mode="HTML"):
+    """Send response as a DM to the user, with a short note in the group."""
+    user = update.effective_user
+    chat = update.effective_chat
+    try:
+        await context.bot.send_message(
+            chat_id=user.id,
+            text=text,
+            parse_mode=parse_mode,
+        )
+        if chat.type in ("group", "supergroup"):
+            await update.message.reply_text(
+                f"@{user.username or user.first_name} check your DMs!",
+            )
+    except Exception:
+        await update.message.reply_text(
+            f"@{user.username or user.first_name} I can't DM you yet! "
+            f"Please start a chat with me first: @LayerGOD_bot, then try again.",
+        )
+
 TIPS_PATH = Path(__file__).parent.parent / "config" / "tips.json"
 TIPS = []
 if TIPS_PATH.exists():
@@ -57,7 +79,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/poll &lt;question&gt; | &lt;option1&gt; | &lt;option2&gt; ... \u2014 Create a poll\n"
         "/potd \u2014 Trigger Print of the Day\n"
     )
-    await update.message.reply_text(text, parse_mode="HTML")
+    await _reply_privately(update, context, text)
 
 
 async def newprint_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -148,7 +170,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         avg = await db.get_average_rating(p["id"])
         rating_str = f" \u2014 {star_rating(round(avg))}" if avg else ""
         lines.append(f"\u2022 <b>#{p['id']}</b> {p['name']}{rating_str}")
-    await update.message.reply_text("\n".join(lines), parse_mode="HTML")
+    await _reply_privately(update, context, "\n".join(lines))
 
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -169,13 +191,13 @@ async def tip_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("No tips loaded.")
         return
     tip = random.choice(TIPS)
-    await update.message.reply_text(format_tip(tip), parse_mode="HTML")
+    await _reply_privately(update, context, format_tip(tip))
 
 
 async def leaderboard_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = context.bot_data["db"]
     users = await db.get_leaderboard()
-    await update.message.reply_text(format_leaderboard(users), parse_mode="HTML")
+    await _reply_privately(update, context, format_leaderboard(users))
 
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -184,7 +206,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reviews = await db.get_review_count()
     users = await db.get_user_count()
     text = f"📊 <b>Community Stats</b>\n\n🖨️ Prints shared: {prints}\n📝 Reviews written: {reviews}\n👥 Members tracked: {users}\n"
-    await update.message.reply_text(text, parse_mode="HTML")
+    await _reply_privately(update, context, text)
 
 
 async def poll_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -218,7 +240,7 @@ async def troubleshoot_command(update: Update, context: ContextTypes.DEFAULT_TYP
     keyword = context.args[0].lower()
     for key, text in TROUBLESHOOT_DB.items():
         if keyword in key or key in keyword:
-            await update.message.reply_text(text, parse_mode="HTML")
+            await _reply_privately(update, context, text)
             return
     issues = ", ".join(TROUBLESHOOT_DB.keys())
     await update.message.reply_text(f"Issue not found. Available: {issues}")
@@ -246,3 +268,4 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "Type /help to see what I can do!"
         )
         await update.message.reply_text(text, parse_mode="HTML")
+
