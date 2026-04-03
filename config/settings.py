@@ -11,13 +11,17 @@ class Settings:
 
     BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
 
-    CHANNEL_ANNOUNCEMENTS: int = int(os.getenv("CHANNEL_ANNOUNCEMENTS", "0"))
-    CHANNEL_GALLERY: int = int(os.getenv("CHANNEL_GALLERY", "0"))
-    CHANNEL_REVIEWS: int = int(os.getenv("CHANNEL_REVIEWS", "0"))
-    CHANNEL_TIPS: int = int(os.getenv("CHANNEL_TIPS", "0"))
-    CHANNEL_REQUESTS: int = int(os.getenv("CHANNEL_REQUESTS", "0"))
-    CHANNEL_POLLS: int = int(os.getenv("CHANNEL_POLLS", "0"))
+    # Group (all topics live in the same supergroup)
     MAIN_GROUP: int = int(os.getenv("MAIN_GROUP", "0"))
+
+    # Topic thread IDs within the supergroup
+    TOPIC_ANNOUNCEMENTS: int = int(os.getenv("TOPIC_ANNOUNCEMENTS", "0"))
+    TOPIC_GALLERY: int = int(os.getenv("TOPIC_GALLERY", "0"))
+    TOPIC_REVIEWS: int = int(os.getenv("TOPIC_REVIEWS", "0"))
+    TOPIC_TIPS: int = int(os.getenv("TOPIC_TIPS", "0"))
+    TOPIC_REQUESTS: int = int(os.getenv("TOPIC_REQUESTS", "0"))
+    TOPIC_POLLS: int = int(os.getenv("TOPIC_POLLS", "0"))
+    TOPIC_GENERAL: int = int(os.getenv("TOPIC_GENERAL", "0"))
 
     ADMIN_IDS: list[int] = [
         int(x.strip())
@@ -33,18 +37,6 @@ class Settings:
     TIMEZONE: str = os.getenv("TIMEZONE", "America/New_York")
 
     DB_PATH: str = os.getenv("DB_PATH", "./data/bot.db")
-
-    @classmethod
-    def channel_directory(cls) -> dict[str, int]:
-        return {
-            "announcements": cls.CHANNEL_ANNOUNCEMENTS,
-            "gallery": cls.CHANNEL_GALLERY,
-            "reviews": cls.CHANNEL_REVIEWS,
-            "tips": cls.CHANNEL_TIPS,
-            "requests": cls.CHANNEL_REQUESTS,
-            "polls": cls.CHANNEL_POLLS,
-            "general": cls.MAIN_GROUP,
-        }
 
     @classmethod
     def is_admin(cls, user_id: int) -> bool:
