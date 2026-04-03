@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from telegram import User
 
 
@@ -48,7 +47,7 @@ def format_request_card(request: dict) -> str:
 
 def format_leaderboard(users: list[dict]) -> str:
     if not users:
-        return "No contributors yet!"
+        return "No contributors yet! Be the first to share a print or write a review."
     medals = ["🥇", "🥈", "🥉"]
     lines = ["🏆 <b>Community Leaderboard</b>\n"]
     for i, user in enumerate(users):
