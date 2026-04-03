@@ -19,7 +19,11 @@ from bot.handlers import (
     review_command,
     search_command,
     request_command,
-    tip_command,
+    catalog_command,
+    orderstatus_command,
+    materials_command,
+    pricing_command,
+    faq_command,
     leaderboard_command,
     stats_command,
     poll_command,
@@ -76,7 +80,11 @@ def main():
     app.add_handler(CommandHandler("review", review_command))
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("request", request_command))
-    app.add_handler(CommandHandler("tip", tip_command))
+    app.add_handler(CommandHandler("catalog", catalog_command))
+    app.add_handler(CommandHandler("orderstatus", orderstatus_command))
+    app.add_handler(CommandHandler("materials", materials_command))
+    app.add_handler(CommandHandler("pricing", pricing_command))
+    app.add_handler(CommandHandler("faq", faq_command))
     app.add_handler(CommandHandler("leaderboard", leaderboard_command))
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("poll", poll_command))
