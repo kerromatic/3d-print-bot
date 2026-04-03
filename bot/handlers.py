@@ -85,10 +85,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = context.bot_data["db"]
     await db.upsert_user(update.effective_user.id, update.effective_user.username or "", update.effective_user.full_name or "")
     text = (
-        "👋 <b>Welcome to the 3D Print Hub!</b>\n\n"
+        "ð <b>Welcome to the 3D Print Hub!</b>\n\n"
         "I help manage this community \u2014 posting prints, collecting reviews, "
         "sharing tips, and tracking contributions.\n\n"
-        "<b>📂 Channels:</b>\n"
+        "<b>ð Channels:</b>\n"
         "\u2022 <b>Announcements</b> \u2014 New prints & community news\n"
         "\u2022 <b>Gallery</b> \u2014 Photo showcase\n"
         "\u2022 <b>Reviews</b> \u2014 Community ratings\n"
@@ -102,7 +102,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
-        "🤖 <b>Available Commands</b>\n\n"
+        "ð¤ <b>Available Commands</b>\n\n"
         "<b>Everyone:</b>\n"
         "/start \u2014 Welcome & channel info\n"
         "/help \u2014 This message\n"
@@ -128,7 +128,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def newprint_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not settings.is_admin(update.effective_user.id):
-        await update.message.reply_text("⛔ Admin only command.")
+        await update.message.reply_text("â Admin only command.")
         return
     if not context.args:
         await update.message.reply_text(
@@ -155,12 +155,12 @@ async def newprint_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print_id = await db.add_print(name=name, description=description, image_path=image_path, tags=tags, printer=printer, material=material, stl_link=stl_link, posted_by=update.effective_user.id)
     await post_new_print(context.bot, print_data, image_path or None)
     await db._increment_user_stat(update.effective_user.id, update.effective_user.username or "", "prints_shared")
-    await update.message.reply_text(f'✅ Print <b>#{print_id}</b> \u2014 "{name}" posted!', parse_mode="HTML")
+    await update.message.reply_text(f'â Print <b>#{print_id}</b> \u2014 "{name}" posted!', parse_mode="HTML")
 
 
 async def postimage_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not settings.is_admin(update.effective_user.id):
-        await update.message.reply_text("⛔ Admin only command.")
+        await update.message.reply_text("â Admin only command.")
         return
     reply = update.message.reply_to_message
     if not reply or not reply.photo:
@@ -170,7 +170,7 @@ async def postimage_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo = reply.photo[-1]
     file = await context.bot.get_file(photo.file_id)
     await post_to_gallery(context.bot, file.file_path, caption)
-    await update.message.reply_text("✅ Posted to gallery!")
+    await update.message.reply_text("â Posted to gallery!")
 
 
 async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -178,7 +178,7 @@ async def review_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Usage: /review <print_id> <1-5> <review text>
     Can attach a photo or reply to a photo to include it with the review.
     """
-        # Anti-spam checks
+    # Anti-spam checks
     user = update.effective_user
     cooldown_msg = _check_cooldown(user.id)
     if cooldown_msg:
@@ -261,7 +261,7 @@ if len(context.args) < 3:
 
 
 async def request_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        # Anti-spam checks
+    # Anti-spam checks
     user = update.effective_user
     cooldown_msg = _check_cooldown(user.id)
     if cooldown_msg:
@@ -281,7 +281,7 @@ if not context.args:
     req_id = await db.add_request(user_id=user.id, username=user.username or user.full_name, description=description)
     request_data = {"id": req_id, "description": description, "username": user.username or user.full_name, "status": "open"}
     await post_request(context.bot, request_data)
-    await update.message.reply_text(f"✅ Request <b>#{req_id}</b> posted!", parse_mode="HTML")
+    await update.message.reply_text(f"â Request <b>#{req_id}</b> posted!", parse_mode="HTML")
 
 
 async def catalog_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -392,13 +392,13 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prints = await db.get_print_count()
     reviews = await db.get_review_count()
     users = await db.get_user_count()
-    text = f"📊 <b>Community Stats</b>\n\n🖨️ Prints shared: {prints}\n📝 Reviews written: {reviews}\n👥 Members tracked: {users}\n"
+    text = f"ð <b>Community Stats</b>\n\nð¨ï¸ Prints shared: {prints}\nð Reviews written: {reviews}\nð¥ Members tracked: {users}\n"
     await _reply_privately(update, context, text)
 
 
 async def poll_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not settings.is_admin(update.effective_user.id):
-        await update.message.reply_text("⛔ Admin only command.")
+        await update.message.reply_text("â Admin only command.")
         return
     raw = " ".join(context.args) if context.args else ""
     parts = [p.strip() for p in raw.split("|")]
@@ -407,16 +407,16 @@ async def poll_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await context.bot.send_poll(chat_id=settings.MAIN_GROUP,
             message_thread_id=settings.TOPIC_POLLS, question=parts[0], options=parts[1:], is_anonymous=False)
-    await update.message.reply_text("✅ Poll posted!")
+    await update.message.reply_text("â Poll posted!")
 
 
 TROUBLESHOOT_DB = {
-    "stringing": "🧵 <b>Stringing Fix</b>\n\n\u2022 Lower nozzle temp by 5-10°C\n\u2022 Retraction: 0.8-1.2mm (direct drive) or 4-6mm (Bowden)\n\u2022 Increase retraction speed to 35-45mm/s\n\u2022 Enable wipe/coasting\n\u2022 Dry your filament",
-    "warping": "🌊 <b>Warping Fix</b>\n\n\u2022 Increase bed temp by 5°C\n\u2022 Use brim or raft\n\u2022 Clean bed with IPA\n\u2022 Use enclosure for ABS/ASA\n\u2022 Reduce fan for first 3-5 layers",
-    "adhesion": "🔗 <b>Bed Adhesion Fix</b>\n\n\u2022 Clean bed with IPA\n\u2022 Re-level / re-run mesh\n\u2022 Slow first layer to 15-20mm/s\n\u2022 Increase first layer width to 120%\n\u2022 Use glue stick or hairspray",
-    "layer": "📐 <b>Layer Shift Fix</b>\n\n\u2022 Check belt tension\n\u2022 Tighten grub screws on pulleys\n\u2022 Lower acceleration/jerk\n\u2022 Check for obstructions\n\u2022 Ensure stepper current is adequate",
-    "clog": "🔧 <b>Nozzle Clog Fix</b>\n\n\u2022 Cold pull: heat to 200°C, push filament, cool to 90°C, pull\n\u2022 Use acupuncture needle\n\u2022 Check heat creep (hotend fan)\n\u2022 Replace nozzle every ~1kg for brass",
-    "elephant": "🐘 <b>Elephant's Foot Fix</b>\n\n\u2022 Lower bed temp by 5°C\n\u2022 Increase Z-offset 0.02-0.05mm\n\u2022 Add chamfer to model\n\u2022 Use elephant foot compensation in slicer",
+    "stringing": "ð§µ <b>Stringing Fix</b>\n\n\u2022 Lower nozzle temp by 5-10Â°C\n\u2022 Retraction: 0.8-1.2mm (direct drive) or 4-6mm (Bowden)\n\u2022 Increase retraction speed to 35-45mm/s\n\u2022 Enable wipe/coasting\n\u2022 Dry your filament",
+    "warping": "ð <b>Warping Fix</b>\n\n\u2022 Increase bed temp by 5Â°C\n\u2022 Use brim or raft\n\u2022 Clean bed with IPA\n\u2022 Use enclosure for ABS/ASA\n\u2022 Reduce fan for first 3-5 layers",
+    "adhesion": "ð <b>Bed Adhesion Fix</b>\n\n\u2022 Clean bed with IPA\n\u2022 Re-level / re-run mesh\n\u2022 Slow first layer to 15-20mm/s\n\u2022 Increase first layer width to 120%\n\u2022 Use glue stick or hairspray",
+    "layer": "ð <b>Layer Shift Fix</b>\n\n\u2022 Check belt tension\n\u2022 Tighten grub screws on pulleys\n\u2022 Lower acceleration/jerk\n\u2022 Check for obstructions\n\u2022 Ensure stepper current is adequate",
+    "clog": "ð§ <b>Nozzle Clog Fix</b>\n\n\u2022 Cold pull: heat to 200Â°C, push filament, cool to 90Â°C, pull\n\u2022 Use acupuncture needle\n\u2022 Check heat creep (hotend fan)\n\u2022 Replace nozzle every ~1kg for brass",
+    "elephant": "ð <b>Elephant's Foot Fix</b>\n\n\u2022 Lower bed temp by 5Â°C\n\u2022 Increase Z-offset 0.02-0.05mm\n\u2022 Add chamfer to model\n\u2022 Use elephant foot compensation in slicer",
 }
 
 async def troubleshoot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -435,11 +435,11 @@ async def troubleshoot_command(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def potd_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not settings.is_admin(update.effective_user.id):
-        await update.message.reply_text("⛔ Admin only command.")
+        await update.message.reply_text("â Admin only command.")
         return
     from bot.scheduler import run_potd
     await run_potd(context)
-    await update.message.reply_text("✅ Print of the Day posted!")
+    await update.message.reply_text("â Print of the Day posted!")
 
 
 async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -450,7 +450,7 @@ async def welcome_new_member(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await db.upsert_user(member.id, member.username or "", member.full_name or "")
         name = member.full_name or member.username or "friend"
         text = (
-            f"👋 Welcome to <b>3D Print Hub</b>, {name}!\n\n"
+            f"ð Welcome to <b>3D Print Hub</b>, {name}!\n\n"
             "Check out our channels, share your prints, and join the conversation.\n"
             "Type /help to see what I can do!"
         )
