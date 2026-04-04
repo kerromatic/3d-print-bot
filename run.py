@@ -1,70 +1,82 @@
 #!/usr/bin/env python3
 """
-Run both the Telegram bot and the dashboard API server.
+Run the Telegram bot, dashboard API, and camera server.
 Usage:
-    python run.py           # Runs both bot + API
+    python run.py           # Runs all services
     python run.py --bot     # Bot only
     python run.py --api     # API/dashboard only
+    python run.py --cam     # Camera server only
 """
 
 import argparse
-import asyncio
 import subprocess
 import sys
 import os
+import threading
+import time
 
 
 def run_bot():
     """Start the Telegram bot."""
-    print("ÃÂ°ÃÂÃÂ¤ÃÂ Starting Telegram bot...")
-    subprocess.run([sys.executable, "main.py"], cwd=os.path.dirname(__file__))
+    subprocess.run(
+        [sys.executable, "main.py"],
+        cwd=os.path.dirname(os.path.abspath(__file__)) or ".",
+    )
 
 
 def run_api():
     """Start the FastAPI dashboard server."""
     port = os.getenv("API_PORT", "8000")
-    print(f"ÃÂ°ÃÂÃÂÃÂ Starting dashboard API on http://localhost:{port}")
-    subprocess.run([
-        sys.executable, "-m", "uvicorn",
-        "api.server:app",
-        "--host", "0.0.0.0",
-        "--port", port,
-        "--reload",
-    ], cwd=os.path.dirname(__file__))
+    subprocess.run(
+        [sys.executable, "-m", "uvicorn", "api.server:app",
+         "--host", "0.0.0.0", "--port", port, "--reload"],
+        cwd=os.path.dirname(os.path.abspath(__file__)) or ".",
+    )
 
 
 def run_cam():
     """Start the standalone camera server."""
+    # Load settings to check if camera is configured
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from config.settings import settings
     if not settings.PRINTER_IP:
         print("Camera not configured (PRINTER_IP missing), skipping cam server")
         return
-    port = settings.CAM_SERVER_PORT
-    print(f"\ud83d\udcf7 Starting live camera on http://localhost:{port}")
-    subprocess.run([
-        sys.executable, "-m", "uvicorn",
-        "cam_server:app",
-        "--host", "0.0.0.0",
-        "--port", str(port),
-        "--log-level", "warning",
-    ], cwd=os.path.dirname(__file__))
+    port = str(settings.CAM_SERVER_PORT)
+    print(f"Starting live camera on http://localhost:{port}")
+    subprocess.run(
+        [sys.executable, "-m", "uvicorn", "cam_server:app",
+         "--host", "0.0.0.0", "--port", port, "--log-level", "warning"],
+        cwd=os.path.dirname(os.path.abspath(__file__)) or ".",
+    )
 
 
-def run_both():
-    """Start both bot and API in parallel."""
-    from concurrent.futures import ProcessPoolExecutor
-    print("ÃÂ°ÃÂÃÂÃÂ Starting 3D Print Hub (Bot + Dashboard)...\n")
-    with ProcessPoolExecutor(max_workers=3) as executor:
-        executor.submit(run_bot)
-        executor.submit(run_api)
-        executor.submit(run_cam)
+def run_all():
+    """Start all services using threads."""
+    print("Starting 3D Print Hub (Bot + Dashboard + Camera)...\n")
+
+    # Start API in a thread
+    api_thread = threading.Thread(target=run_api, daemon=True)
+    api_thread.start()
+    print("Started dashboard API on http://localhost:8000")
+
+    # Start camera server in a thread
+    cam_thread = threading.Thread(target=run_cam, daemon=True)
+    cam_thread.start()
+
+    # Small delay to let the other services start
+    time.sleep(2)
+
+    print("Starting Telegram bot...")
+    # Run bot in the main thread (it handles signals properly)
+    run_bot()
 
 
 def main():
     parser = argparse.ArgumentParser(description="3D Print Hub Runner")
     parser.add_argument("--bot", action="store_true", help="Run bot only")
     parser.add_argument("--cam", action="store_true", help="Camera server only")
-    parser.add_argument("--api", action="store_true", help="Run API/dashboard only")
+    parser.add_argument("--api", action="store_true", help="API/dashboard only")
     args = parser.parse_args()
 
     if args.bot:
@@ -74,67 +86,7 @@ def main():
     elif args.api:
         run_api()
     else:
-        run_both()
-
-
-if __name__ == "__main__":
-    main()
-#!/usr/bin/env python3
-"""
-Run both the Telegram bot and the dashboard API server.
-Usage:
-    python run.py           # Runs both bot + API
-    python run.py --bot     # Bot only
-    python run.py --api     # API/dashboard only
-"""
-
-import argparse
-import asyncio
-import subprocess
-import sys
-import os
-
-
-def run_bot():
-    """Start the Telegram bot."""
-    print("Ã°ÂÂ¤Â Starting Telegram bot...")
-    subprocess.run([sys.executable, "main.py"], cwd=os.path.dirname(__file__))
-
-
-def run_api():
-    """Start the FastAPI dashboard server."""
-    port = os.getenv("API_PORT", "8000")
-    print(f"Ã°ÂÂÂ Starting dashboard API on http://localhost:{port}")
-    subprocess.run([
-        sys.executable, "-m", "uvicorn",
-        "api.server:app",
-        "--host", "0.0.0.0",
-        "--port", port,
-        "--reload",
-    ], cwd=os.path.dirname(__file__))
-
-
-def run_both():
-    """Start both bot and API in parallel."""
-    from concurrent.futures import ProcessPoolExecutor
-    print("Ã°ÂÂÂ Starting 3D Print Hub (Bot + Dashboard)...\n")
-    with ProcessPoolExecutor(max_workers=2) as executor:
-        executor.submit(run_bot)
-        executor.submit(run_api)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="3D Print Hub Runner")
-    parser.add_argument("--bot", action="store_true", help="Run bot only")
-    parser.add_argument("--api", action="store_true", help="Run API/dashboard only")
-    args = parser.parse_args()
-
-    if args.bot:
-        run_bot()
-    elif args.api:
-        run_api()
-    else:
-        run_both()
+        run_all()
 
 
 if __name__ == "__main__":
