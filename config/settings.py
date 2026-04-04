@@ -23,6 +23,20 @@ class Settings:
     TOPIC_POLLS: int = int(os.getenv("TOPIC_POLLS", "0"))
     TOPIC_GENERAL: int = int(os.getenv("TOPIC_GENERAL", "0"))
 
+    # Camera (Bambu Lab X1C)
+    PRINTER_IP: str = os.getenv("PRINTER_IP", "")
+    PRINTER_ACCESS_CODE: str = os.getenv("PRINTER_ACCESS_CODE", "")
+    TOPIC_LIVECAM: int = int(os.getenv("TOPIC_LIVECAM", "0"))
+    CAM_SERVER_PORT: str = os.getenv("CAM_SERVER_PORT", "8001")
+    CAM_SNAPSHOT_INTERVAL: int = int(os.getenv("CAM_SNAPSHOT_INTERVAL", "600"))
+
+    # Dashboard auth
+    DASH_USERNAME: str = os.getenv("DASH_USERNAME", "admin")
+    DASH_PASSWORD: str = os.getenv("DASH_PASSWORD", "")
+
+    # Public cam URL (set after ngrok setup)
+    CAM_PUBLIC_URL: str = os.getenv("CAM_PUBLIC_URL", "")
+
     ADMIN_IDS: list[int] = [
         int(x.strip())
         for x in os.getenv("ADMIN_IDS", "0").split(",")
