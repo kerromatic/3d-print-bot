@@ -1,4 +1,4 @@
-"""Scheduled tasks â Print of the Day, Tip of the Day, auto-gallery."""
+"""Scheduled tasks Ã¢ÂÂ Print of the Day, Tip of the Day, auto-gallery."""
 
 import json
 import random
@@ -49,7 +49,7 @@ async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
         buf = load_image_from_path(img_path)
         if buf:
             filename = Path(img_path).stem.replace("_", " ").replace("-", " ").title()
-            await post_to_gallery(context.bot, buf, caption=f"ð¸ {filename}")
+            await post_to_gallery(context.bot, buf, caption=f"Ã°ÂÂÂ¸ {filename}")
             mark_as_posted(folder, Path(img_path).name)
 
 
@@ -68,7 +68,7 @@ async def run_cam_snapshot(context: ContextTypes.DEFAULT_TYPE):
             chat_id=settings.MAIN_GROUP,
             message_thread_id=settings.TOPIC_LIVECAM,
             photo=snapshot,
-            caption=f"\ud83d\udcf8 Live snapshot at {now}",
+            caption=f"Live snapshot at {now}",
         )
 
 
