@@ -1,4 +1,4 @@
-"""Scheduled tasks — Print of the Day, Tip of the Day, auto-gallery."""
+"""Scheduled tasks â Print of the Day, Tip of the Day, auto-gallery."""
 
 import json
 import random
@@ -11,6 +11,7 @@ from telegram.ext import ContextTypes
 from config.settings import settings
 from bot.posting import post_potd, post_tip, post_to_gallery
 from utils.image_utils import get_pending_images, mark_as_posted, load_image_from_path
+from bot.camera import capture_snapshot
 
 # Load tips
 TIPS_PATH = Path(__file__).parent.parent / "config" / "tips.json"
@@ -48,8 +49,27 @@ async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
         buf = load_image_from_path(img_path)
         if buf:
             filename = Path(img_path).stem.replace("_", " ").replace("-", " ").title()
-            await post_to_gallery(context.bot, buf, caption=f"📸 {filename}")
+            await post_to_gallery(context.bot, buf, caption=f"ð¸ {filename}")
             mark_as_posted(folder, Path(img_path).name)
+
+
+async def run_cam_snapshot(context: ContextTypes.DEFAULT_TYPE):
+    """Capture and post a snapshot from the printer camera to the Live Prints topic."""
+    if not settings.PRINTER_IP or not settings.PRINTER_ACCESS_CODE:
+        return
+    if not settings.TOPIC_LIVECAM:
+        return
+    
+    snapshot = await capture_snapshot()
+    if snapshot:
+        import datetime
+        now = datetime.datetime.now().strftime("%I:%M %p")
+        await context.bot.send_photo(
+            chat_id=settings.MAIN_GROUP,
+            message_thread_id=settings.TOPIC_LIVECAM,
+            photo=snapshot,
+            caption=f"\ud83d\udcf8 Live snapshot at {now}",
+        )
 
 
 def schedule_jobs(job_queue):
@@ -63,6 +83,15 @@ def schedule_jobs(job_queue):
     # Tip of the Day
     h, m = map(int, settings.TIP_TIME.split(":"))
     job_queue.run_daily(run_tip_of_the_day, time=time(h, m, tzinfo=tz), name="tip")
+
+    # Camera snapshot
+    if settings.PRINTER_IP and settings.TOPIC_LIVECAM:
+        job_queue.run_repeating(
+            run_cam_snapshot,
+            interval=settings.CAM_SNAPSHOT_INTERVAL,
+            first=30,
+            name="cam_snapshot",
+        )
 
     # Gallery scan every 30 minutes
     job_queue.run_repeating(run_gallery_scan, interval=1800, first=10, name="gallery_scan")
