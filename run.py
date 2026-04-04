@@ -16,14 +16,14 @@ import os
 
 def run_bot():
     """Start the Telegram bot."""
-    print("Ã°ÂÂ¤Â Starting Telegram bot...")
+    print("ÃÂ°ÃÂÃÂ¤ÃÂ Starting Telegram bot...")
     subprocess.run([sys.executable, "main.py"], cwd=os.path.dirname(__file__))
 
 
 def run_api():
     """Start the FastAPI dashboard server."""
     port = os.getenv("API_PORT", "8000")
-    print(f"Ã°ÂÂÂ Starting dashboard API on http://localhost:{port}")
+    print(f"ÃÂ°ÃÂÃÂÃÂ Starting dashboard API on http://localhost:{port}")
     subprocess.run([
         sys.executable, "-m", "uvicorn",
         "api.server:app",
@@ -53,8 +53,8 @@ def run_cam():
 def run_both():
     """Start both bot and API in parallel."""
     from concurrent.futures import ProcessPoolExecutor
-    print("Ã°ÂÂÂ Starting 3D Print Hub (Bot + Dashboard)...\n")
-    with ProcessPoolExecutor(max_workers=2) as executor:
+    print("ÃÂ°ÃÂÃÂÃÂ Starting 3D Print Hub (Bot + Dashboard)...\n")
+    with ProcessPoolExecutor(max_workers=3) as executor:
         executor.submit(run_bot)
         executor.submit(run_api)
         executor.submit(run_cam)
@@ -97,14 +97,14 @@ import os
 
 def run_bot():
     """Start the Telegram bot."""
-    print("ð¤ Starting Telegram bot...")
+    print("Ã°ÂÂ¤Â Starting Telegram bot...")
     subprocess.run([sys.executable, "main.py"], cwd=os.path.dirname(__file__))
 
 
 def run_api():
     """Start the FastAPI dashboard server."""
     port = os.getenv("API_PORT", "8000")
-    print(f"ð Starting dashboard API on http://localhost:{port}")
+    print(f"Ã°ÂÂÂ Starting dashboard API on http://localhost:{port}")
     subprocess.run([
         sys.executable, "-m", "uvicorn",
         "api.server:app",
@@ -117,7 +117,7 @@ def run_api():
 def run_both():
     """Start both bot and API in parallel."""
     from concurrent.futures import ProcessPoolExecutor
-    print("ð Starting 3D Print Hub (Bot + Dashboard)...\n")
+    print("Ã°ÂÂÂ Starting 3D Print Hub (Bot + Dashboard)...\n")
     with ProcessPoolExecutor(max_workers=2) as executor:
         executor.submit(run_bot)
         executor.submit(run_api)
