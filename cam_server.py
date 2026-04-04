@@ -6,6 +6,8 @@ Safe to expose via ngrok for customers.
 """
 
 import asyncio
+import os
+import shutil
 import subprocess
 import signal
 import sys
@@ -20,12 +22,42 @@ def get_rtsp_url() -> str:
     return f"rtsps://bblp:{settings.PRINTER_ACCESS_CODE}@{settings.PRINTER_IP}:322/streaming/live/1"
 
 
+def _find_ffmpeg() -> str:
+    """Find ffmpeg executable, checking common Windows install locations."""
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg:
+        return ffmpeg
+    common_paths = [
+        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Links\ffmpeg.exe"),
+        r"C:\ffmpeg\bin\ffmpeg.exe",
+        r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+    ]
+    for path in common_paths:
+        if os.path.isfile(path):
+            return path
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment") as key:
+            sys_path = winreg.QueryValueEx(key, "Path")[0]
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Environment") as key:
+            user_path = winreg.QueryValueEx(key, "Path")[0]
+        fresh_path = sys_path + ";" + user_path
+        for d in fresh_path.split(";"):
+            candidate = os.path.join(d.strip(), "ffmpeg.exe")
+            if os.path.isfile(candidate):
+                return candidate
+    except Exception:
+        pass
+    return "ffmpeg"
+
+
 async def generate_mjpeg():
     """Stream MJPEG frames from the printer camera via ffmpeg."""
     rtsp_url = get_rtsp_url()
     
+    ffmpeg_path = _find_ffmpeg()
     cmd = [
-        "ffmpeg",
+        ffmpeg_path,
         "-rtsp_transport", "tcp",
         "-i", rtsp_url,
         "-f", "mjpeg",
