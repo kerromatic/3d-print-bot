@@ -1,5 +1,5 @@
 """
-3D Print Hub — FastAPI Dashboard Backend
+3D Print Hub â FastAPI Dashboard Backend
 Serves live data from the bot's SQLite database to the web dashboard.
 """
 
@@ -16,6 +16,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
+from api.auth import check_auth, auth_response
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        # Skip auth for health endpoint
+        if request.url.path == "/api/health":
+            return await call_next(request)
+        if not check_auth(request):
+            return auth_response()
+        return await call_next(request)
+
 
 DB_PATH = os.getenv("DB_PATH", "./data/bot.db")
 UPLOADS_DIR = os.getenv("UPLOADS_DIR", "./assets/prints")
@@ -423,4 +435,19 @@ async def health():
 
 
 if os.path.isdir(DASHBOARD_DIR):
-    app.mount("/", StaticFiles(directory=DASHBOARD_DIR, html=True), name="dashboard")
+    
+@app.get("/api/cam-stream")
+async def cam_stream_proxy():
+    """Proxy the camera MJPEG stream for the dashboard Live Cam tab."""
+    cam_port = os.getenv("CAM_SERVER_PORT", "8001")
+    from starlette.responses import StreamingResponse
+    import httpx
+    async def stream():
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", f"http://localhost:{cam_port}/stream") as r:
+                async for chunk in r.aiter_bytes():
+                    yield chunk
+    return StreamingResponse(stream(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+
+app.mount("/", StaticFiles(directory=DASHBOARD_DIR, html=True), name="dashboard")
