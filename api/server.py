@@ -125,11 +125,11 @@ async def list_requests(status: str = None, limit: int = 50):
     db = await get_db()
     if status:
         rows = await (await db.execute(
-            "SELECT * FROM requests WHERE status=? ORDER BY id DESC LIMIT ?", (status, limit)
+            "SELECT * FROM print_requests WHERE status=? ORDER BY id DESC LIMIT ?", (status, limit)
         )).fetchall()
     else:
         rows = await (await db.execute(
-            "SELECT * FROM requests ORDER BY id DESC LIMIT ?", (limit,)
+            "SELECT * FROM print_requests ORDER BY id DESC LIMIT ?", (limit,)
         )).fetchall()
     return [dict(r) for r in rows]
 
@@ -137,7 +137,7 @@ async def list_requests(status: str = None, limit: int = 50):
 @app.put("/api/requests/{request_id}/status")
 async def update_request_status(request_id: int, status: str = Form(...)):
     db = await get_db()
-    await db.execute("UPDATE requests SET status=? WHERE id=?", (status, request_id))
+    await db.execute("UPDATE print_requests SET status=? WHERE id=?", (status, request_id))
     await db.commit()
     return {"id": request_id, "status": status}
 
@@ -145,7 +145,7 @@ async def update_request_status(request_id: int, status: str = Form(...)):
 @app.delete("/api/requests/{request_id}")
 async def delete_request(request_id: int):
     db = await get_db()
-    await db.execute("DELETE FROM requests WHERE id=?", (request_id,))
+    await db.execute("DELETE FROM print_requests WHERE id=?", (request_id,))
     await db.commit()
     return {"deleted": request_id}
 
@@ -166,7 +166,7 @@ async def stats():
     db = await get_db()
     prints = await (await db.execute("SELECT COUNT(*) as c FROM prints")).fetchone()
     reviews = await (await db.execute("SELECT COUNT(*) as c FROM reviews")).fetchone()
-    requests_open = await (await db.execute("SELECT COUNT(*) as c FROM requests WHERE status='open'")).fetchone()
+    requests_open = await (await db.execute("SELECT COUNT(*) as c FROM print_requests WHERE status='open'")).fetchone()
     users = await (await db.execute("SELECT COUNT(*) as c FROM users")).fetchone()
     return {
         "total_prints": prints["c"],
