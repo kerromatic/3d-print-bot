@@ -37,7 +37,7 @@ def set_snapshot_interval(seconds: int):
 
 async def run_potd(context: ContextTypes.DEFAULT_TYPE):
     """Post print of the day."""
-    images = get_pending_images()
+    images = get_pending_images(str(settings.UPLOADS_DIR))
     if not images:
         return
     chosen = random.choice(images)
@@ -58,7 +58,7 @@ async def run_tip_of_the_day(context: ContextTypes.DEFAULT_TYPE):
     await post_tip(context.bot, text)
 
 
-async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
+async async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
     """Scan for new images and post them to the gallery."""
     images = get_pending_images()
     for img in images[:3]:
