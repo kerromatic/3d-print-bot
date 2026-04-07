@@ -114,4 +114,7 @@ def schedule_jobs(job_queue):
         )
 
     # Gallery scan every 30 minutes
-    job_queue.run_repeating(run_gallery_scan, interval=1800, first=10, name="gallery_scan")
+    try:
+        job_queue.run_repeating(run_gallery_scan, interval=1800, first=10, name="gallery_scan")
+    except Exception:
+        pass
