@@ -61,7 +61,7 @@ async def run_tip_of_the_day(context: ContextTypes.DEFAULT_TYPE):
 
 async def run_gallery_scan(context: ContextTypes.DEFAULT_TYPE):
     """Scan for new images and post them to the gallery."""
-    images = get_pending_images(str(settings.UPLOADS_DIR))
+    images = get_pending_images(os.getenv("UPLOADS_DIR", "./assets/prints"))
     for img in images[:3]:
         photo = load_image_from_path(img["path"])
         if photo:
