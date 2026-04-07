@@ -1,3 +1,4 @@
+import os
 """Scheduled tasks - Print of the Day, Tip of the Day, auto-gallery."""
 
 import json
@@ -37,7 +38,7 @@ def set_snapshot_interval(seconds: int):
 
 async def run_potd(context: ContextTypes.DEFAULT_TYPE):
     """Post print of the day."""
-    images = get_pending_images(str(settings.UPLOADS_DIR))
+    images = get_pending_images(os.getenv("UPLOADS_DIR", "./assets/prints"))
     if not images:
         return
     chosen = random.choice(images)
