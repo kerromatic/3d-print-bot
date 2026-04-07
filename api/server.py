@@ -57,7 +57,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         public_paths = ["/", "/api/settings", "/api/stats", "/api/leaderboard",
                         "/api/prints", "/api/reviews", "/api/activity", "/api/channels",
-                        "/api/snapshot-interval"]
+                        "/api/snapshot-interval", "/api/printer/status"]
         if any(request.url.path == p or request.url.path.startswith(p + "?") for p in public_paths):
             return await call_next(request)
         static_exts = [".html", ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".woff", ".woff2"]
@@ -329,6 +329,28 @@ async def upload_print(
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(DASHBOARD_DIR, exist_ok=True)
 os.makedirs("assets", exist_ok=True)
+
+# --- Printer status (live from MQTT) ---
+@app.get("/api/printer/status")
+async def get_printer_status():
+    try:
+        from bot.printer_mqtt import printer_status as ps
+        return {
+            "connected": ps.connected,
+            "gcode_state": ps.gcode_state,
+            "is_printing": ps.is_printing,
+            "progress": ps.mc_percent,
+            "remaining_minutes": ps.mc_remaining_time,
+            "remaining_str": ps.remaining_str,
+            "layer": ps.layer_num,
+            "total_layers": ps.total_layer_num,
+            "file": ps.print_name,
+            "nozzle_temp": ps.nozzle_temper,
+            "bed_temp": ps.bed_temper,
+            "summary": ps.summary(),
+        }
+    except Exception as e:
+        return {"connected": False, "gcode_state": "UNKNOWN", "is_printing": False, "error": str(e)}
 
 # --- Health check ---
 @app.get("/api/health")
