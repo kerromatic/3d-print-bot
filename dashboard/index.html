@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guapo Prints Dashboard</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #ff6b35;
+    --accent2: #ff9f1c;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f39c12;
+    --text: #e8e8e8;
+    --text2: #999;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; }
+  .logo span { color: var(--accent); }
+  .status-bar { display: flex; align-items: center; gap: 16px; font-size: 0.8rem; color: var(--text2); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* Nav Tabs */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+  }
+  .tab-btn {
+    background: none; border: none; color: var(--text2);
+    padding: 14px 18px; cursor: pointer; font-size: 0.85rem;
+    border-bottom: 2px solid transparent; transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Main */
+  main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Stat Cards */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .stat-card .label { font-size: 0.75rem; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .stat-card .value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+  .stat-card .sub { font-size: 0.75rem; color: var(--text2); margin-top: 4px; }
+
+  /* Tables */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 24px;
+  }
+  .card-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-header h2 { font-size: 0.95rem; font-weight: 600; }
+  .badge {
+    background: var(--surface2); border-radius: 20px;
+    padding: 2px 10px; font-size: 0.75rem; color: var(--text2);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 10px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); border-bottom: 1px solid var(--border); background: var(--surface2); }
+  td { padding: 12px 16px; font-size: 0.85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .empty { text-align: center; color: var(--text2); padding: 40px; font-size: 0.85rem; }
+
+  /* Status pills */
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .pill-pending  { background: #f39c1220; color: var(--yellow); }
+  .pill-approved { background: #2ecc7120; color: var(--green); }
+  .pill-denied   { background: #e74c3c20; color: var(--red); }
+  .pill-printing { background: #3498db20; color: #3498db; }
+  .pill-done     { background: #2ecc7120; color: var(--green); }
+
+  /* Buttons */
+  .btn {
+    padding: 6px 14px; border-radius: 6px; border: none;
+    cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: opacity .2s;
+  }
+  .btn:hover { opacity: .8; }
+  .btn-approve { background: var(--green); color: #fff; }
+  .btn-deny    { background: var(--red);   color: #fff; }
+  .btn-delete  { background: #333; color: var(--text2); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-row { display: flex; gap: 6px; }
+
+  /* Leaderboard */
+  .lb-rank { font-weight: 700; color: var(--accent2); width: 40px; }
+  .lb-rank.gold   { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .stars { color: var(--accent2); letter-spacing: 1px; }
+
+  /* Config */
+  .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+  .config-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .config-card h3 { font-size: 0.85rem; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 16px; }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 0.8rem; color: var(--text2); margin-bottom: 5px; }
+  .form-row input, .form-row select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;
+  }
+  .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+  .save-status { font-size: 0.78rem; color: var(--green); margin-top: 8px; min-height: 1.2em; }
+
+  /* Camera */
+  .cam-wrap { background: #000; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; }
+  .cam-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .cam-offline { color: var(--text2); font-size: 0.85rem; }
+
+  /* Printer status */
+  .printer-status { display: flex; align-items: center; gap: 8px; }
+  .printer-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .printer-dot.idle     { background: var(--green); }
+  .printer-dot.printing { background: var(--accent); animation: pulse 1s infinite; }
+  .printer-dot.offline  { background: var(--text2); }
+
+  /* Loading spinner */
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Refresh btn */
+  .refresh-btn { background: none; border: 1px solid var(--border); color: var(--text2); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🍝 <span>Guapo</span> Prints</div>
+  <div class="status-bar">
+    <span id="printer-status-header">
+      <span class="printer-dot idle" id="printer-dot"></span>
+      <span id="printer-status-text">Idle</span>
+    </span>
+    <span id="last-updated" style="color:var(--text2)">–</span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+  <button class="tab-btn" onclick="switchTab('prints')">Prints</button>
+  <button class="tab-btn" onclick="switchTab('requests')">Requests</button>
+  <button class="tab-btn" onclick="switchTab('reviews')">Reviews</button>
+  <button class="tab-btn" onclick="switchTab('leaderboard')">Leaderboard</button>
+  <button class="tab-btn" onclick="switchTab('camera')">Camera</button>
+  <button class="tab-btn" onclick="switchTab('config')">Config</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW TAB -->
+<div id="tab-overview" class="tab-content active">
+  <div class="stats-grid" id="stats-cards">
+    <div class="stat-card"><div class="label">Total Prints</div><div class="value" id="s-prints">–</div></div>
+    <div class="stat-card"><div class="label">Prints This Week</div><div class="value" id="s-prints-week">–</div></div>
+    <div class="stat-card"><div class="label">Open Requests</div><div class="value" id="s-open">–</div></div>
+    <div class="stat-card"><div class="label">Total Requests</div><div class="value" id="s-requests">–</div></div>
+    <div class="stat-card"><div class="label">Reviews</div><div class="value" id="s-reviews">–</div></div>
+    <div class="stat-card"><div class="label">Avg Rating</div><div class="value" id="s-avg">–</div><div class="sub">out of 5</div></div>
+    <div class="stat-card"><div class="label">Members</div><div class="value" id="s-members">–</div></div>
+    <div class="stat-card"><div class="label">New This Week</div><div class="value" id="s-members-week">–</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Recent Activity</h2>
+      <button class="refresh-btn" onclick="loadActivity()">Refresh</button>
+    </div>
+    <div id="activity-list"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- PRINTS TAB -->
+<div id="tab-prints" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>All Prints</h2>
+      <span class="badge" id="prints-count">–</span>
+    </div>
+    <div id="prints-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- REQUESTS TAB -->
+<div id="tab-requests" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>Print Requests</h2>
+      <span class="badge" id="requests-count">–</span>
+    </div>
+    <div id="requests-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- REVIEWS TAB -->
+<div id="tab-reviews" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>Reviews</h2>
+      <span class="badge" id="reviews-count">–</span>
+    </div>
+    <div id="reviews-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- LEADERBOARD TAB -->
+<div id="tab-leaderboard" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>Top Reviewers</h2>
+    </div>
+    <div id="leaderboard-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- CAMERA TAB -->
+<div id="tab-camera" class="tab-content">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;">
+    <div>
+      <div class="card-header" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;margin-bottom:0;">
+        <h2>Live Camera Feed</h2>
+        <button class="refresh-btn" onclick="loadCamStream()">Refresh</button>
+      </div>
+      <div class="cam-wrap" id="cam-wrap" style="border-radius:0 0 var(--radius) var(--radius);border:1px solid var(--border);border-top:none;">
+        <span class="cam-offline">Loading stream...</span>
+      </div>
+    </div>
+    <div>
+      <div class="config-card">
+        <h3>Snapshot Settings</h3>
+        <div class="form-row">
+          <label>Snapshot Frequency</label>
+          <select id="snap-interval">
+            <option value="30">Every 30 seconds</option>
+            <option value="60">Every 1 minute</option>
+            <option value="120">Every 2 minutes</option>
+            <option value="300">Every 5 minutes</option>
+            <option value="600">Every 10 minutes</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="saveSnapInterval()">Save Interval</button>
+        <div class="save-status" id="snap-save-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG TAB -->
+<div id="tab-config" class="tab-content">
+  <div class="config-grid">
+    <div class="config-card">
+      <h3>Bot Settings</h3>
+      <div id="config-form"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+    <div class="config-card">
+      <h3>Channels</h3>
+      <div id="channels-list"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+const API = 'http://localhost:8000';
+
+// ── Tab switching ──────────────────────────────────────────────
+const tabLoaded = {};
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${name}'`)));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (!tabLoaded[name]) { loadTab(name); tabLoaded[name] = true; }
+}
+
+function loadTab(name) {
+  if (name === 'overview')    { loadStats(); loadActivity(); }
+  if (name === 'prints')      loadPrints();
+  if (name === 'requests')    loadRequests();
+  if (name === 'reviews')     loadReviews();
+  if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'camera')      loadCamStream();
+  if (name === 'config')      { loadConfig(); loadChannels(); }
+}
+
+// ── Fetch helpers ─────────────────────────────────────────────
+async function api(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function fmt(ts) {
+  if (!ts) return '–';
+  const d = new Date(ts);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function pill(status) {
+  const map = { pending:'pill-pending', approved:'pill-approved', denied:'pill-denied', printing:'pill-printing', done:'pill-done', completed:'pill-done' };
+  return `<span class="pill ${map[status]||''}">${status||'–'}</span>`;
+}
+
+function stars(n) {
+  if (!n) return '–';
+  return '<span class="stars">' + '★'.repeat(Math.round(n)) + '☆'.repeat(5-Math.round(n)) + '</span>';
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const d = await api('/api/stats');
+    document.getElementById('s-prints').textContent       = d.prints ?? '–';
+    document.getElementById('s-prints-week').textContent  = d.prints_this_week ?? '–';
+    document.getElementById('s-open').textContent         = d.open ?? '–';
+    document.getElementById('s-requests').textContent     = d.requests ?? '–';
+    document.getElementById('s-reviews').textContent      = d.reviews ?? '–';
+    document.getElementById('s-avg').textContent          = d.avg ? Number(d.avg).toFixed(1) : '–';
+    document.getElementById('s-members').textContent      = d.members ?? '–';
+    document.getElementById('s-members-week').textContent = d.members_this_week ?? '–';
+    document.getElementById('last-updated').textContent   = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) { console.error('stats', e); }
+}
+
+// ── Activity ──────────────────────────────────────────────────
+async function loadActivity() {
+  const el = document.getElementById('activity-list');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const rows = await api('/api/activity');
+    if (!rows.length) { el.innerHTML = '<div class="empty">No recent activity</div>'; return; }
+    el.innerHTML = '<table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Detail</th></tr></thead><tbody>' +
+      rows.map(r => `<tr><td>${fmt(r.created_at)}</td><td>${r.username||'–'}</td><td>${r.action||'–'}</td><td>${r.detail||'–'}</td></tr>`).join('') +
+      '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load activity</div>'; }
+}
+
+// ── Prints ────────────────────────────────────────────────────
+async function loadPrints() {
+  const el = document.getElementById('prints-table-wrap');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const rows = await api('/api/prints');
+    document.getElementById('prints-count').textContent = rows.length;
+    if (!rows.length) { el.innerHTML = '<div class="empty">No prints yet</div>'; return; }
+    el.innerHTML = '<table><thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Tags</th><th>Created</th><th>Actions</th></tr></thead><tbody>' +
+      rows.map(r => `<tr>
+        <td>${r.id}</td>
+        <td>${r.name||'–'}</td>
+        <td>${r.description||'–'}</td>
+        <td>${r.tags||'–'}</td>
+        <td>${fmt(r.created_at)}</td>
+        <td><div class="btn-row"><button class="btn btn-delete" onclick="deletePrint(${r.id})">Delete</button></div></td>
+      </tr>`).join('') +
+      '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load prints</div>'; }
+}
+
+async function deletePrint(id) {
+  if (!confirm('Delete print #' + id + '?')) return;
+  await fetch(API + '/api/prints/' + id, {method:'DELETE'});
+  tabLoaded.prints = false; loadPrints(); tabLoaded.prints = true;
+}
+
+// ── Requests ──────────────────────────────────────────────────
+async function loadRequests() {
+  const el = document.getElementById('requests-table-wrap');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const rows = await api('/api/requests');
+    document.getElementById('requests-count').textContent = rows.length;
+    if (!rows.length) { el.innerHTML = '<div class="empty">No requests yet</div>'; return; }
+    el.innerHTML = '<table><thead><tr><th>ID</th><th>User</th><th>Item</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>' +
+      rows.map(r => `<tr>
+        <td>${r.id}</td>
+        <td>${r.username||r.user_id||'–'}</td>
+        <td>${r.item_name||r.description||'–'}</td>
+        <td>${pill(r.status)}</td>
+        <td>${fmt(r.created_at)}</td>
+        <td><div class="btn-row">
+          <button class="btn btn-approve" onclick="updateRequest(${r.id},'approved')">Approve</button>
+          <button class="btn btn-deny"    onclick="updateRequest(${r.id},'denied')">Deny</button>
+          <button class="btn btn-delete"  onclick="deleteRequest(${r.id})">Delete</button>
+        </div></td>
+      </tr>`).join('') +
+      '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load requests</div>'; }
+}
+
+async function updateRequest(id, status) {
+  await fetch(API + '/api/requests/' + id + '/status', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status})});
+  tabLoaded.requests = false; loadRequests(); tabLoaded.requests = true;
+}
+
+async function deleteRequest(id) {
+  if (!confirm('Delete request #' + id + '?')) return;
+  await fetch(API + '/api/requests/' + id, {method:'DELETE'});
+  tabLoaded.requests = false; loadRequests(); tabLoaded.requests = true;
+}
+
+// ── Reviews ───────────────────────────────────────────────────
+async function loadReviews() {
+  const el = document.getElementById('reviews-table-wrap');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const rows = await api('/api/reviews');
+    document.getElementById('reviews-count').textContent = rows.length;
+    if (!rows.length) { el.innerHTML = '<div class="empty">No reviews yet</div>'; return; }
+    el.innerHTML = '<table><thead><tr><th>ID</th><th>User</th><th>Rating</th><th>Comment</th><th>Created</th></tr></thead><tbody>' +
+      rows.map(r => `<tr>
+        <td>${r.id}</td>
+        <td>${r.username||r.user_id||'–'}</td>
+        <td>${stars(r.rating)}</td>
+        <td>${r.comment||'–'}</td>
+        <td>${fmt(r.created_at)}</td>
+      </tr>`).join('') +
+      '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load reviews</div>'; }
+}
+
+// ── Leaderboard ───────────────────────────────────────────────
+async function loadLeaderboard() {
+  const el = document.getElementById('leaderboard-table-wrap');
+  el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try {
+    const rows = await api('/api/leaderboard');
+    if (!rows.length) { el.innerHTML = '<div class="empty">No data yet</div>'; return; }
+    const rankClass = i => i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    el.innerHTML = '<table><thead><tr><th>#</th><th>User</th><th>Reviews</th><th>Avg Rating</th><th>Prints</th></tr></thead><tbody>' +
+      rows.map((r,i) => `<tr>
+        <td class="lb-rank ${rankClass(i)}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+        <td>${r.username||r.user_id||'–'}</td>
+        <td>${r.review_count??'–'}</td>
+        <td>${r.avg_rating ? Number(r.avg_rating).toFixed(1) : '–'}</td>
+        <td>${r.print_count??'–'}</td>
+      </tr>`).join('') +
+      '</tbody></table>';
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load leaderboard</div>'; }
+}
+
+// ── Camera ────────────────────────────────────────────────────
+async function loadCamStream() {
+  const wrap = document.getElementById('cam-wrap');
+  try {
+    const d = await api('/api/cam-stream');
+    if (d.url) {
+      wrap.innerHTML = `<img src="${d.url}" alt="Camera feed" onerror="this.parentNode.innerHTML='<span class=cam-offline>Camera offline</span>'" />`;
+    } else {
+      wrap.innerHTML = '<span class="cam-offline">No stream URL configured</span>';
+    }
+  } catch(e) {
+    wrap.innerHTML = '<span class="cam-offline">Camera unavailable</span>';
+  }
+
+  // Load current snap interval
+  try {
+    const s = await api('/api/snapshot-interval');
+    const sel = document.getElementById('snap-interval');
+    if (s.interval) sel.value = s.interval;
+  } catch(e) {}
+}
+
+async function saveSnapInterval() {
+  const val = document.getElementById('snap-interval').value;
+  const status = document.getElementById('snap-save-status');
+  try {
+    const r = await fetch(API + '/api/snapshot-interval', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({interval: parseInt(val)})
+    });
+    if (r.ok) {
+      status.textContent = 'Saved!';
+      setTimeout(() => status.textContent = '', 3000);
+    } else {
+      status.style.color = 'var(--red)';
+      status.textContent = 'Error saving';
+    }
+  } catch(e) {
+    status.style.color = 'var(--red)';
+    status.textContent = 'Failed to save';
+  }
+}
+
+// ── Config ────────────────────────────────────────────────────
+async function loadConfig() {
+  const el = document.getElementById('config-form');
+  try {
+    const d = await api('/api/settings');
+    const keys = Object.keys(d).filter(k => k !== 'id');
+    if (!keys.length) { el.innerHTML = '<div class="empty">No settings found</div>'; return; }
+    el.innerHTML = keys.map(k => `
+      <div class="form-row">
+        <label>${k.replace(/_/g,' ')}</label>
+        <input type="text" id="cfg-${k}" value="${d[k]?=''}"/>
+      </div>`).join('') +
+      `<button class="btn btn-primary" onclick="saveConfig(${JSON.stringify(keys)})">Save Settings</button>
+       <div class="save-status" id="cfg-save-status"></div>`;
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load settings</div>'; }
+}
+
+async function saveConfig(keys) {
+  const payload = {};
+  keys.forEach(k => { payload[k] = document.getElementById('cfg-' + k)?.value; });
+  const status = document.getElementById('cfg-save-status');
+  try {
+    const r = await fetch(API + '/api/settings', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      status.textContent = 'Settings saved!';
+      setTimeout(() => status.textContent = '', 3000);
+    } else {
+      status.style.color = 'var(--red)'; status.textContent = 'Error saving';
+    }
+  } catch(e) { status.style.color = 'var(--red)'; status.textContent = 'Failed to save'; }
+}
+
+async function loadChannels() {
+  const el = document.getElementById('channels-list');
+  try {
+    const rows = await api('/api/channels');
+    if (!rows.length) { el.innerHTML = '<div class="empty">No channels configured</div>'; return; }
+    el.innerHTML = rows.map(c => `
+      <div class="form-row">
+        <label>${c.name||c.type||'Channel'}</label>
+        <input type="text" value="${c.channel_id||c.id||'–'}" readonly/>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load channels</div>'; }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadTab('overview');
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
