@@ -563,8 +563,7 @@ async function loadChannels() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-loadTab('overview');
-setInterval(loadStats, 30000);
-</script>
-</body>
-</html>
+document.addEventListener("DOMContentLoaded", function() {
+  loadTab("overview");
+  setInterval(loadStats, 30000);
+});
