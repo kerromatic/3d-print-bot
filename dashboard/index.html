@@ -348,7 +348,7 @@ async function loadStats() {
     document.getElementById('s-open').textContent         = d.open ?? '-';
     document.getElementById('s-requests').textContent     = d.requests ?? '-';
     document.getElementById('s-reviews').textContent      = d.reviews ?? '-';
-    document.getElementById('s-avg').textContent          = d.avg ? Number(d.avg).toFixed(1) : '&#8211;';
+    document.getElementById('s-avg').textContent          = (d.avg !== null && d.avg !== undefined && d.avg !== 0) ? Number(d.avg).toFixed(1) : '-';
     document.getElementById('s-members').textContent      = d.members ?? '-';
     document.getElementById('s-members-week').textContent = d.members_this_week ?? '-';
     document.getElementById('last-updated').textContent   = 'Updated ' + new Date().toLocaleTimeString();
