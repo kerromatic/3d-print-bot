@@ -165,7 +165,7 @@
       <span class="printer-dot idle" id="printer-dot"></span>
       <span id="printer-status-text">Idle</span>
     </span>
-    <span id="last-updated" style="color:var(--text2)">&#8211;</span>
+    <span id="last-updated" style="color:var(--text2)">-</span>
   </div>
 </header>
 
@@ -184,14 +184,14 @@
 <!-- OVERVIEW TAB -->
 <div id="tab-overview" class="tab-content active">
   <div class="stats-grid" id="stats-cards">
-    <div class="stat-card"><div class="label">Total Prints</div><div class="value" id="s-prints">&#8211;</div></div>
-    <div class="stat-card"><div class="label">Prints This Week</div><div class="value" id="s-prints-week">&#8211;</div></div>
-    <div class="stat-card"><div class="label">Open Requests</div><div class="value" id="s-open">&#8211;</div></div>
-    <div class="stat-card"><div class="label">Total Requests</div><div class="value" id="s-requests">&#8211;</div></div>
-    <div class="stat-card"><div class="label">Reviews</div><div class="value" id="s-reviews">&#8211;</div></div>
-    <div class="stat-card"><div class="label">Avg Rating</div><div class="value" id="s-avg">&#8211;</div><div class="sub">out of 5</div></div>
-    <div class="stat-card"><div class="label">Members</div><div class="value" id="s-members">&#8211;</div></div>
-    <div class="stat-card"><div class="label">New This Week</div><div class="value" id="s-members-week">&#8211;</div></div>
+    <div class="stat-card"><div class="label">Total Prints</div><div class="value" id="s-prints">-</div></div>
+    <div class="stat-card"><div class="label">Prints This Week</div><div class="value" id="s-prints-week">-</div></div>
+    <div class="stat-card"><div class="label">Open Requests</div><div class="value" id="s-open">-</div></div>
+    <div class="stat-card"><div class="label">Total Requests</div><div class="value" id="s-requests">-</div></div>
+    <div class="stat-card"><div class="label">Reviews</div><div class="value" id="s-reviews">-</div></div>
+    <div class="stat-card"><div class="label">Avg Rating</div><div class="value" id="s-avg">-</div><div class="sub">out of 5</div></div>
+    <div class="stat-card"><div class="label">Members</div><div class="value" id="s-members">-</div></div>
+    <div class="stat-card"><div class="label">New This Week</div><div class="value" id="s-members-week">-</div></div>
   </div>
 
   <div class="card">
@@ -208,7 +208,7 @@
   <div class="card">
     <div class="card-header">
       <h2>All Prints</h2>
-      <span class="badge" id="prints-count">&#8211;</span>
+      <span class="badge" id="prints-count">-</span>
     </div>
     <div id="prints-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
@@ -219,7 +219,7 @@
   <div class="card">
     <div class="card-header">
       <h2>Print Requests</h2>
-      <span class="badge" id="requests-count">&#8211;</span>
+      <span class="badge" id="requests-count">-</span>
     </div>
     <div id="requests-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
@@ -230,7 +230,7 @@
   <div class="card">
     <div class="card-header">
       <h2>Reviews</h2>
-      <span class="badge" id="reviews-count">&#8211;</span>
+      <span class="badge" id="reviews-count">-</span>
     </div>
     <div id="reviews-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
@@ -297,7 +297,7 @@
 <script>
 const API = 'http://localhost:8000';
 
-// -- Tab switching ----------------------------------------------
+// &#9472;&#9472; Tab switching &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 const tabLoaded = {};
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${name}'`)));
@@ -316,7 +316,7 @@ function loadTab(name) {
   if (name === 'config')      { loadConfig(); loadChannels(); }
 }
 
-// -- Fetch helpers ---------------------------------------------
+// &#9472;&#9472; Fetch helpers &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function api(path) {
   const r = await fetch(API + path);
   if (!r.ok) throw new Error(r.status);
@@ -331,15 +331,15 @@ function fmt(ts) {
 
 function pill(status) {
   const map = { pending:'pill-pending', approved:'pill-approved', denied:'pill-denied', printing:'pill-printing', done:'pill-done', completed:'pill-done' };
-  return `<span class="pill ${map[status]||''}">${status||'-'}</span>`;
+  return `<span class="pill ${map[status]||''}">${status||'&#8211;'}</span>`;
 }
 
 function stars(n) {
   if (!n) return '-';
-  return '<span class="stars">' + '*'.repeat(Math.round(n)) + '*'.repeat(5-Math.round(n)) + '</span>';
+  return '<span class="stars">' + '&#9733;'.repeat(Math.round(n)) + '&#9734;'.repeat(5-Math.round(n)) + '</span>';
 }
 
-// -- Stats -----------------------------------------------------
+// &#9472;&#9472; Stats &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadStats() {
   try {
     const d = await api('/api/stats');
@@ -348,14 +348,14 @@ async function loadStats() {
     document.getElementById('s-open').textContent         = d.open ?? '-';
     document.getElementById('s-requests').textContent     = d.requests ?? '-';
     document.getElementById('s-reviews').textContent      = d.reviews ?? '-';
-    document.getElementById('s-avg').textContent          = d.avg ? Number(d.avg).toFixed(1) : '-';
+    document.getElementById('s-avg').textContent          = d.avg ? Number(d.avg).toFixed(1) : '&#8211;';
     document.getElementById('s-members').textContent      = d.members ?? '-';
     document.getElementById('s-members-week').textContent = d.members_this_week ?? '-';
     document.getElementById('last-updated').textContent   = 'Updated ' + new Date().toLocaleTimeString();
   } catch(e) { console.error('stats', e); }
 }
 
-// -- Activity --------------------------------------------------
+// &#9472;&#9472; Activity &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadActivity() {
   const el = document.getElementById('activity-list');
   el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
@@ -363,12 +363,12 @@ async function loadActivity() {
     const rows = await api('/api/activity');
     if (!rows.length) { el.innerHTML = '<div class="empty">No recent activity</div>'; return; }
     el.innerHTML = '<table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Detail</th></tr></thead><tbody>' +
-      rows.map(r => `<tr><td>${fmt(r.created_at)}</td><td>${r.username||'-'}</td><td>${r.action||'-'}</td><td>${r.detail||'-'}</td></tr>`).join('') +
+      rows.map(r => `<tr><td>${fmt(r.created_at)}</td><td>${r.username||'&#8211;'}</td><td>${r.action||'&#8211;'}</td><td>${r.detail||'&#8211;'}</td></tr>`).join('') +
       '</tbody></table>';
   } catch(e) { el.innerHTML = '<div class="empty">Could not load activity</div>'; }
 }
 
-// -- Prints ----------------------------------------------------
+// &#9472;&#9472; Prints &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadPrints() {
   const el = document.getElementById('prints-table-wrap');
   el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
@@ -379,9 +379,9 @@ async function loadPrints() {
     el.innerHTML = '<table><thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Tags</th><th>Created</th><th>Actions</th></tr></thead><tbody>' +
       rows.map(r => `<tr>
         <td>${r.id}</td>
-        <td>${r.name||'-'}</td>
-        <td>${r.description||'-'}</td>
-        <td>${r.tags||'-'}</td>
+        <td>${r.name||'&#8211;'}</td>
+        <td>${r.description||'&#8211;'}</td>
+        <td>${r.tags||'&#8211;'}</td>
         <td>${fmt(r.created_at)}</td>
         <td><div class="btn-row"><button class="btn btn-delete" onclick="deletePrint(${r.id})">Delete</button></div></td>
       </tr>`).join('') +
@@ -395,7 +395,7 @@ async function deletePrint(id) {
   tabLoaded.prints = false; loadPrints(); tabLoaded.prints = true;
 }
 
-// -- Requests --------------------------------------------------
+// &#9472;&#9472; Requests &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadRequests() {
   const el = document.getElementById('requests-table-wrap');
   el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
@@ -406,8 +406,8 @@ async function loadRequests() {
     el.innerHTML = '<table><thead><tr><th>ID</th><th>User</th><th>Item</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>' +
       rows.map(r => `<tr>
         <td>${r.id}</td>
-        <td>${r.username||r.user_id||'-'}</td>
-        <td>${r.item_name||r.description||'-'}</td>
+        <td>${r.username||r.user_id||'&#8211;'}</td>
+        <td>${r.item_name||r.description||'&#8211;'}</td>
         <td>${pill(r.status)}</td>
         <td>${fmt(r.created_at)}</td>
         <td><div class="btn-row">
@@ -431,7 +431,7 @@ async function deleteRequest(id) {
   tabLoaded.requests = false; loadRequests(); tabLoaded.requests = true;
 }
 
-// -- Reviews ---------------------------------------------------
+// &#9472;&#9472; Reviews &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadReviews() {
   const el = document.getElementById('reviews-table-wrap');
   el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
@@ -442,16 +442,16 @@ async function loadReviews() {
     el.innerHTML = '<table><thead><tr><th>ID</th><th>User</th><th>Rating</th><th>Comment</th><th>Created</th></tr></thead><tbody>' +
       rows.map(r => `<tr>
         <td>${r.id}</td>
-        <td>${r.username||r.user_id||'-'}</td>
+        <td>${r.username||r.user_id||'&#8211;'}</td>
         <td>${stars(r.rating)}</td>
-        <td>${r.comment||'-'}</td>
+        <td>${r.comment||'&#8211;'}</td>
         <td>${fmt(r.created_at)}</td>
       </tr>`).join('') +
       '</tbody></table>';
   } catch(e) { el.innerHTML = '<div class="empty">Could not load reviews</div>'; }
 }
 
-// -- Leaderboard -----------------------------------------------
+// &#9472;&#9472; Leaderboard &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadLeaderboard() {
   const el = document.getElementById('leaderboard-table-wrap');
   el.innerHTML = '<div class="empty"><span class="spinner"></span></div>';
@@ -462,16 +462,16 @@ async function loadLeaderboard() {
     el.innerHTML = '<table><thead><tr><th>#</th><th>User</th><th>Reviews</th><th>Avg Rating</th><th>Prints</th></tr></thead><tbody>' +
       rows.map((r,i) => `<tr>
         <td class="lb-rank ${rankClass(i)}">${i===0?'1st':i===1?'2nd':i===2?'3rd':i+1}</td>
-        <td>${r.username||r.user_id||'-'}</td>
-        <td>${r.review_count??'-'}</td>
-        <td>${r.avg_rating ? Number(r.avg_rating).toFixed(1) : '-'}</td>
-        <td>${r.print_count??'-'}</td>
+        <td>${r.username||r.user_id||'&#8211;'}</td>
+        <td>${r.review_count??'&#8211;'}</td>
+        <td>${r.avg_rating ? Number(r.avg_rating).toFixed(1) : '&#8211;'}</td>
+        <td>${r.print_count??'&#8211;'}</td>
       </tr>`).join('') +
       '</tbody></table>';
   } catch(e) { el.innerHTML = '<div class="empty">Could not load leaderboard</div>'; }
 }
 
-// -- Camera ----------------------------------------------------
+// &#9472;&#9472; Camera &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadCamStream() {
   const wrap = document.getElementById('cam-wrap');
   try {
@@ -515,7 +515,7 @@ async function saveSnapInterval() {
   }
 }
 
-// -- Config ----------------------------------------------------
+// &#9472;&#9472; Config &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
 async function loadConfig() {
   const el = document.getElementById('config-form');
   try {
@@ -557,15 +557,37 @@ async function loadChannels() {
     el.innerHTML = rows.map(c => `
       <div class="form-row">
         <label>${c.name||c.type||'Channel'}</label>
-        <input type="text" value="${c.channel_id||c.id||'-'}" readonly/>
+        <input type="text" value="${c.channel_id||c.id||'&#8211;'}" readonly/>
       </div>`).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load channels</div>'; }
 }
 
-// -- Init ------------------------------------------------------
+// &#9472;&#9472; Init &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+async function loadPrinterStatus() {
+  try {
+    const d = await api('/api/printer/status');
+    const dot = document.getElementById('printer-dot');
+    const text = document.getElementById('printer-status-text');
+    if (!dot || !text) return;
+    dot.className = 'printer-dot';
+    if (!d.connected) {
+      dot.classList.add('offline');
+      text.textContent = 'Offline';
+    } else if (d.is_printing) {
+      dot.classList.add('printing');
+      text.textContent = d.progress + '% - ' + (d.file || 'Printing');
+    } else {
+      dot.classList.add('idle');
+      text.textContent = 'Idle (' + (d.gcode_state || 'IDLE') + ')';
+    }
+  } catch(e) {}
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   loadTab("overview");
   setInterval(loadStats, 30000);
+  loadPrinterStatus();
+  setInterval(loadPrinterStatus, 15000);
 });
 </script>
 </body>
