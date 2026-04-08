@@ -352,6 +352,29 @@ async def get_printer_status():
     except Exception as e:
         return {"connected": False, "gcode_state": "UNKNOWN", "is_printing": False, "error": str(e)}
 
+# --- Printer status ---
+@app.get("/api/printer/status")
+async def get_printer_status():
+    try:
+        from bot.printer_mqtt import printer_status as ps
+        return {
+            "connected": ps.connected,
+            "gcode_state": ps.gcode_state,
+            "is_printing": ps.is_printing,
+            "progress": ps.mc_percent,
+            "remaining_minutes": ps.mc_remaining_time,
+            "remaining_str": ps.remaining_str,
+            "layer": ps.layer_num,
+            "total_layers": ps.total_layer_num,
+            "file": ps.print_name,
+            "nozzle_temp": round(ps.nozzle_temper, 1),
+            "bed_temp": round(ps.bed_temper, 1),
+            "summary": ps.summary(),
+        }
+    except Exception as e:
+        return {"connected": False, "gcode_state": "UNKNOWN", "is_printing": False, "error": str(e)}
+
+
 # --- Health check ---
 @app.get("/api/health")
 async def health():
