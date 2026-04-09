@@ -572,16 +572,16 @@ async function loadPrinterStatus() {
     dot.className = 'printer-dot';
     if (!d.connected) {
       dot.classList.add('offline');
-      text.textContent = 'Offline';
-      text.style.color = '';
+      text.textContent = 'OFFLINE';
+      text.style.color = 'var(--red)';
     } else if (d.is_printing) {
       dot.classList.add('printing');
-      text.textContent = d.progress + '% - ' + (d.file || 'Printing');
-      text.style.color = '';
+      text.textContent = 'ONLINE  ' + d.progress + '% - ' + (d.file || 'Printing');
+      text.style.color = 'var(--green)';
     } else {
       dot.classList.add('idle');
-      text.textContent = 'ONLINE';
-      text.style.color = 'var(--green)';
+      text.textContent = 'IDLE';
+      text.style.color = 'var(--yellow)';
     }
   } catch(e) {}
 }
