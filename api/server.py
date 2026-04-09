@@ -334,23 +334,16 @@ os.makedirs("assets", exist_ok=True)
 @app.get("/api/printer/status")
 async def get_printer_status():
     try:
-        from bot.printer_mqtt import printer_status as ps
-        return {
-            "connected": ps.connected,
-            "gcode_state": ps.gcode_state,
-            "is_printing": ps.is_printing,
-            "progress": ps.mc_percent,
-            "remaining_minutes": ps.mc_remaining_time,
-            "remaining_str": ps.remaining_str,
-            "layer": ps.layer_num,
-            "total_layers": ps.total_layer_num,
-            "file": ps.print_name,
-            "nozzle_temp": round(ps.nozzle_temper, 1),
-            "bed_temp": round(ps.bed_temper, 1),
-            "summary": ps.summary(),
-        }
-    except Exception as e:
-        return {"connected": False, "gcode_state": "UNKNOWN", "is_printing": False, "error": str(e)}
+        status_path = Path(DB_PATH).parent / "printer_status.json"
+        if status_path.exists():
+            import json as _json
+            return _json.loads(status_path.read_text())
+    except Exception:
+        pass
+    return {"connected": False, "gcode_state": "UNKNOWN", "is_printing": False,
+            "progress": 0, "remaining_minutes": 0, "remaining_str": "",
+            "layer": 0, "total_layers": 0, "file": "Unknown",
+            "nozzle_temp": 0.0, "bed_temp": 0.0, "summary": "Printer offline"}
 
 
 # --- Health check ---
