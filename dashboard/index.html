@@ -573,12 +573,15 @@ async function loadPrinterStatus() {
     if (!d.connected) {
       dot.classList.add('offline');
       text.textContent = 'Offline';
+      text.style.color = '';
     } else if (d.is_printing) {
       dot.classList.add('printing');
       text.textContent = d.progress + '% - ' + (d.file || 'Printing');
+      text.style.color = '';
     } else {
       dot.classList.add('idle');
-      text.textContent = 'Idle (' + (d.gcode_state || 'IDLE') + ')';
+      text.textContent = 'ONLINE';
+      text.style.color = 'var(--green)';
     }
   } catch(e) {}
 }
