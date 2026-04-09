@@ -4,6 +4,7 @@ Connects to the printer via MQTT over TLS to get real-time print status.
 """
 
 import json
+import os
 import ssl
 import threading
 import logging
@@ -92,17 +93,44 @@ class PrinterStatus:
 # Global printer status instance
 printer_status = PrinterStatus()
 
+def _write_status_json():
+    """Write current printer status to data/printer_status.json for the API process to read."""
+    try:
+        ps = printer_status
+        data = {
+            "connected": ps._connected,
+            "gcode_state": ps.gcode_state,
+            "is_printing": ps.is_printing,
+            "progress": ps.mc_percent,
+            "remaining_minutes": ps.mc_remaining_time,
+            "remaining_str": ps.remaining_str,
+            "layer": ps.layer_num,
+            "total_layers": ps.total_layer_num,
+            "file": ps.print_name,
+            "nozzle_temp": round(ps.nozzle_temper, 1),
+            "bed_temp": round(ps.bed_temper, 1),
+            "summary": ps.summary(),
+        }
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "printer_status.json")
+        with open(path, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+
 
 def _on_connect(client, userdata, flags, reason_code, properties=None):
     serial = settings.PRINTER_SERIAL
     logger.info(f"MQTT connected to printer (rc={reason_code})")
     client.subscribe(f"device/{serial}/report")
     printer_status._connected = True
+    _write_status_json()
 
 
 def _on_disconnect(client, userdata, flags, reason_code, properties=None):
     logger.warning(f"MQTT disconnected (rc={reason_code})")
     printer_status._connected = False
+    _write_status_json()
 
 
 def _on_message(client, userdata, msg):
@@ -139,6 +167,7 @@ def _on_message(client, userdata, msg):
         ps.subtask_name = data["subtask_name"]
 
     ps._last_update = time.time()
+    _write_status_json()
 
 
 def start_mqtt_listener():
