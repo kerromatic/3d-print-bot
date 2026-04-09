@@ -499,8 +499,7 @@ async function saveSnapInterval() {
   try {
     const r = await fetch(API + '/api/snapshot-interval', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({interval: parseInt(val)})
+      body: (function(){ const f = new FormData(); f.append('interval', parseInt(val)); return f; })()
     });
     if (r.ok) {
       status.textContent = 'Saved!';
