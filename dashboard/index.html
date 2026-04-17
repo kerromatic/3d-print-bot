@@ -657,7 +657,7 @@ function updatePrinterCard(d) {
     set('pc-nozzle', d.nozzle_temp ? d.nozzle_temp + '&#176;C' : '--');
     set('pc-bed',    d.bed_temp   ? d.bed_temp   + '&#176;C' : '--');
   } else if (d.is_printing) {
-    if (badge) { badge.textContent = 'PRINTING'; badge.style.background = '#ff6b3520'; badge.style.color = 'var(--accent)'; }
+    if (badge) { badge.textContent = 'PRINTING'; badge.style.background = '#2ecc7120'; badge.style.color = 'var(--green)'; }
     set('pc-state', 'Printing');
     set('pc-file', d.file || '--');
     set('pc-progress', d.progress + '%');
