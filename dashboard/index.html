@@ -654,8 +654,8 @@ function updatePrinterCard(d) {
     if (badge) { badge.textContent = 'OFFLINE'; badge.style.background = '#e74c3c20'; badge.style.color = 'var(--red)'; }
     set('pc-state', 'Offline'); set('pc-file', '--'); set('pc-progress', '--');
     set('pc-layer', '--'); set('pc-remaining', '--');
-    set('pc-nozzle', d.nozzle_temp ? d.nozzle_temp + '&#176;C' : '--');
-    set('pc-bed',    d.bed_temp   ? d.bed_temp   + '&#176;C' : '--');
+    set('pc-nozzle', d.nozzle_temp ? d.nozzle_temp + '°C' : '--');
+    set('pc-bed',    d.bed_temp   ? d.bed_temp   + '°C' : '--');
   } else if (d.is_printing) {
     if (badge) { badge.textContent = 'PRINTING'; badge.style.background = '#2ecc7120'; badge.style.color = 'var(--green)'; }
     set('pc-state', 'Printing');
@@ -663,16 +663,16 @@ function updatePrinterCard(d) {
     set('pc-progress', d.progress + '%');
     set('pc-layer', d.layer && d.total_layers ? d.layer + ' / ' + d.total_layers : '--');
     set('pc-remaining', d.remaining_str || '--');
-    set('pc-nozzle', d.nozzle_temp + '&#176;C');
-    set('pc-bed',    d.bed_temp    + '&#176;C');
+    set('pc-nozzle', d.nozzle_temp + '°C');
+    set('pc-bed',    d.bed_temp    + '°C');
   } else {
     if (badge) { badge.textContent = 'IDLE'; badge.style.background = '#f39c1220'; badge.style.color = 'var(--yellow)'; }
     set('pc-state', 'Idle');
     set('pc-file', d.file && d.file !== 'Unknown' ? d.file : '--');
     set('pc-progress', '--');
     set('pc-layer', '--'); set('pc-remaining', '--');
-    set('pc-nozzle', d.nozzle_temp + '&#176;C');
-    set('pc-bed',    d.bed_temp    + '&#176;C');
+    set('pc-nozzle', d.nozzle_temp + '°C');
+    set('pc-bed',    d.bed_temp    + '°C');
   }
 }
 
