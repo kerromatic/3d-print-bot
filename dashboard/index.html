@@ -194,6 +194,43 @@
     <div class="stat-card"><div class="label">New This Week</div><div class="value" id="s-members-week">-</div></div>
   </div>
 
+  <div class="card" id="printer-card">
+    <div class="card-header">
+      <h2>Printer Status</h2>
+      <span id="printer-card-state" class="badge">--</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0;padding:0 4px 4px;">
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Status</div>
+        <div class="value" id="pc-state" style="font-size:1.1rem;">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">File</div>
+        <div class="value" id="pc-file" style="font-size:0.85rem;word-break:break-all;">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Progress</div>
+        <div class="value" id="pc-progress">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Layer</div>
+        <div class="value" id="pc-layer" style="font-size:1.1rem;">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Remaining</div>
+        <div class="value" id="pc-remaining" style="font-size:1.1rem;">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Nozzle Temp</div>
+        <div class="value" id="pc-nozzle" style="font-size:1.1rem;">--</div>
+      </div>
+      <div class="stat-card" style="border:none;background:var(--surface2);">
+        <div class="label">Bed Temp</div>
+        <div class="value" id="pc-bed" style="font-size:1.1rem;">--</div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <h2>Recent Activity</h2>
@@ -595,16 +632,48 @@ async function loadPrinterStatus() {
       dot.classList.add('offline');
       text.textContent = 'OFFLINE';
       text.style.color = 'var(--red)';
+      updatePrinterCard(d);
     } else if (d.is_printing) {
       dot.classList.add('printing');
       text.textContent = 'ONLINE  ' + d.progress + '% - ' + (d.file || 'Printing');
       text.style.color = 'var(--green)';
+      updatePrinterCard(d);
     } else {
       dot.classList.add('idle');
       text.textContent = 'IDLE';
       text.style.color = 'var(--yellow)';
+      updatePrinterCard(d);
     }
   } catch(e) {}
+}
+
+function updatePrinterCard(d) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const badge = document.getElementById('printer-card-state');
+  if (!d.connected) {
+    if (badge) { badge.textContent = 'OFFLINE'; badge.style.background = '#e74c3c20'; badge.style.color = 'var(--red)'; }
+    set('pc-state', 'Offline'); set('pc-file', '--'); set('pc-progress', '--');
+    set('pc-layer', '--'); set('pc-remaining', '--');
+    set('pc-nozzle', d.nozzle_temp ? d.nozzle_temp + '&#176;C' : '--');
+    set('pc-bed',    d.bed_temp   ? d.bed_temp   + '&#176;C' : '--');
+  } else if (d.is_printing) {
+    if (badge) { badge.textContent = 'PRINTING'; badge.style.background = '#ff6b3520'; badge.style.color = 'var(--accent)'; }
+    set('pc-state', 'Printing');
+    set('pc-file', d.file || '--');
+    set('pc-progress', d.progress + '%');
+    set('pc-layer', d.layer && d.total_layers ? d.layer + ' / ' + d.total_layers : '--');
+    set('pc-remaining', d.remaining_str || '--');
+    set('pc-nozzle', d.nozzle_temp + '&#176;C');
+    set('pc-bed',    d.bed_temp    + '&#176;C');
+  } else {
+    if (badge) { badge.textContent = 'IDLE'; badge.style.background = '#f39c1220'; badge.style.color = 'var(--yellow)'; }
+    set('pc-state', 'Idle');
+    set('pc-file', d.file && d.file !== 'Unknown' ? d.file : '--');
+    set('pc-progress', '--');
+    set('pc-layer', '--'); set('pc-remaining', '--');
+    set('pc-nozzle', d.nozzle_temp + '&#176;C');
+    set('pc-bed',    d.bed_temp    + '&#176;C');
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
