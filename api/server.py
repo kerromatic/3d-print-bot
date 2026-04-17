@@ -18,6 +18,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 from api.auth import check_auth, auth_response
+from config.settings import settings as _settings  # ensures config/.env is loaded
 
 DB_PATH = os.getenv("DB_PATH", "./data/bot.db")
 UPLOADS_DIR = os.getenv("UPLOADS_DIR", "./assets/prints")
