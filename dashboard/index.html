@@ -519,27 +519,49 @@ async function loadConfig() {
   const el = document.getElementById('config-form');
   try {
     const d = await api('/api/settings');
-    const keys = Object.keys(d).filter(k => k !== 'id');
-    if (!keys.length) { el.innerHTML = '<div class="empty">No settings found</div>'; return; }
-    el.innerHTML = keys.map(k => `
-      <div class="form-row">
-        <label>${k.replace(/_/g,' ')}</label>
-        <input type="text" id="cfg-${k}" value="${d[k]??''}"/>
-      </div>`).join('') +
-      `<button class="btn btn-primary" onclick="saveConfig(${JSON.stringify(keys)})">Save Settings</button>
-       <div class="save-status" id="cfg-save-status"></div>`;
+    // Flatten nested settings into labelled sections
+    const sections = [
+      { title: 'Bot', fields: [
+        { key: 'bot_token_set', label: 'Bot Token', val: d.bot_token_set ? 'Set' : 'NOT SET', readonly: true },
+        { key: 'main_group',   label: 'Main Group ID', val: d.main_group || '' },
+      ]},
+      { title: 'Topics', fields: Object.entries(d.topics||{}).map(([k,v]) => ({ key: 'topic_'+k, label: k.charAt(0).toUpperCase()+k.slice(1)+' Topic ID', val: v||'' })) },
+      { title: 'Schedule', fields: [
+        { key: 'potd_time',  label: 'POTD Time',   val: d.schedule?.potd_time||'' },
+        { key: 'tip_time',   label: 'Tip Time',    val: d.schedule?.tip_time||'' },
+        { key: 'timezone',   label: 'Timezone',    val: d.schedule?.timezone||'' },
+      ]},
+      { title: 'Printer', fields: [
+        { key: 'printer_ip',    label: 'Printer IP',   val: d.printer?.ip||'' },
+        { key: 'printer_token', label: 'Access Code',  val: d.printer?.has_access_code ? 'Set' : 'NOT SET', readonly: true },
+        { key: 'printer_serial',label: 'Serial',       val: d.printer?.serial||'' },
+      ]},
+    ];
+    el.innerHTML = sections.map(s =>
+      `<h3 style="font-size:0.8rem;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 10px;">${s.title}</h3>` +
+      s.fields.map(f => `<div class="form-row">
+        <label>${f.label}</label>
+        <input type="text" id="cfg-${f.key}" value="${f.val}" ${f.readonly?'readonly style="color:var(--text2)"':''}/>
+      </div>`).join('')
+    ).join('') +
+    `<button class="btn btn-primary" onclick="saveConfig()">Save Settings</button>
+     <div class="save-status" id="cfg-save-status"></div>`;
   } catch(e) { el.innerHTML = '<div class="empty">Could not load settings</div>'; }
 }
 
-async function saveConfig(keys) {
-  const payload = {};
-  keys.forEach(k => { payload[k] = document.getElementById('cfg-' + k)?.value; });
+async function saveConfig() {
   const status = document.getElementById('cfg-save-status');
+  // Collect all editable cfg- fields
+  const payload = {};
+  document.querySelectorAll('[id^="cfg-"]:not([readonly])').forEach(el => {
+    payload[el.id.replace('cfg-', '')] = el.value;
+  });
   try {
     const r = await fetch(API + '/api/settings', {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
     });
     if (r.ok) {
+      status.style.color = 'var(--green)';
       status.textContent = 'Settings saved!';
       setTimeout(() => status.textContent = '', 3000);
     } else {
