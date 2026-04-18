@@ -71,29 +71,18 @@ async def capture_snapshot() -> BytesIO | None:
     stream_url = f"http://localhost:{cam_port}/stream"
 
     try:
-        # Read raw MJPEG stream and extract first complete JPEG frame
+        # Call the cam server's dedicated /snapshot endpoint
         import urllib.request
-        with urllib.request.urlopen(stream_url, timeout=10) as resp:
-            raw = b""
-            while True:
-                chunk = resp.read(4096)
-                if not chunk:
-                    break
-                raw += chunk
-                # Look for JPEG start (FFD8) and end (FFD9) markers
-                start = raw.find(b"\xff\xd8")
-                if start != -1:
-                    end = raw.find(b"\xff\xd9", start + 2)
-                    if end != -1:
-                        jpeg_data = raw[start:end + 2]
-                        buf = BytesIO(jpeg_data)
-                        buf.seek(0)
-                        logger.info("Snapshot captured from cam server MJPEG stream")
-                        return buf
-                # Safety limit - don't read more than 2MB
-                if len(raw) > 2 * 1024 * 1024:
-                    break
-        logger.warning("Could not extract JPEG frame from MJPEG stream, trying direct RTSPS")
+        snap_url = f"http://localhost:{cam_port}/snapshot"
+        with urllib.request.urlopen(snap_url, timeout=35) as resp:
+            if resp.status == 200:
+                data = resp.read()
+                if data and len(data) > 100:
+                    buf = BytesIO(data)
+                    buf.seek(0)
+                    logger.info("Snapshot captured from cam server /snapshot endpoint")
+                    return buf
+        logger.warning("Cam server /snapshot returned empty, trying direct RTSPS")
     except Exception as e:
         logger.warning(f"Cam server snapshot error: {e}, trying direct RTSPS")
 
