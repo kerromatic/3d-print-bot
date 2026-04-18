@@ -89,7 +89,7 @@ async def capture_snapshot() -> BytesIO | None:
             stderr=asyncio.subprocess.PIPE,
         )
         
-        _, stderr = await asyncio.wait_for(process.communicate(), timeout=15)
+        _, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
         
         if process.returncode != 0:
             logger.error(f"ffmpeg failed: {stderr.decode()[-200:]}")
