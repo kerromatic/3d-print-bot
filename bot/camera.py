@@ -71,27 +71,28 @@ async def capture_snapshot() -> BytesIO | None:
     stream_url = f"http://localhost:{cam_port}/stream"
 
     try:
-        # Open the MJPEG stream and read until we have one complete JPEG frame
+        # Grab one frame from the already-running cam server MJPEG stream
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            tmp_path_cam = tmp.name
         proc = await asyncio.create_subprocess_exec(
             _find_ffmpeg(),
             "-i", stream_url,
             "-vframes", "1",
             "-q:v", "2",
-            "-f", "image2",
-            "-vcodec", "mjpeg",
-            "pipe:1",
+            "-y", tmp_path_cam,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=15)
-
-        if proc.returncode == 0 and stdout:
-            buf = BytesIO(stdout)
+        _, stderr = await asyncio.wait_for(proc.communicate(), timeout=15)
+        tmp_file_cam = Path(tmp_path_cam)
+        if tmp_file_cam.exists() and tmp_file_cam.stat().st_size > 0:
+            buf = BytesIO(tmp_file_cam.read_bytes())
             buf.seek(0)
+            tmp_file_cam.unlink(missing_ok=True)
             logger.info("Snapshot captured from cam server stream")
             return buf
-        else:
-            logger.warning(f"Cam server snapshot failed: {stderr.decode()[-100:]}, trying direct RTSPS")
+        tmp_file_cam.unlink(missing_ok=True)
+        logger.warning(f"Cam server snapshot failed: {stderr.decode()[-100:]}, trying direct RTSPS")
     except Exception as e:
         logger.warning(f"Cam server snapshot error: {e}, trying direct RTSPS")
 
