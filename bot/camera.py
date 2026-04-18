@@ -76,6 +76,8 @@ async def capture_snapshot() -> BytesIO | None:
         cmd = [
             ffmpeg_path,
             "-rtsp_transport", "tcp",
+            "-rtsp_flags", "prefer_tcp",
+            "-allowed_media_types", "video",
             "-i", rtsp_url,
             "-vframes", "1",
             "-q:v", "2",
