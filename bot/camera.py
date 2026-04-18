@@ -71,28 +71,29 @@ async def capture_snapshot() -> BytesIO | None:
     stream_url = f"http://localhost:{cam_port}/stream"
 
     try:
-        # Grab one frame from the already-running cam server MJPEG stream
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-            tmp_path_cam = tmp.name
-        proc = await asyncio.create_subprocess_exec(
-            _find_ffmpeg(),
-            "-i", stream_url,
-            "-vframes", "1",
-            "-q:v", "2",
-            "-y", tmp_path_cam,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        _, stderr = await asyncio.wait_for(proc.communicate(), timeout=15)
-        tmp_file_cam = Path(tmp_path_cam)
-        if tmp_file_cam.exists() and tmp_file_cam.stat().st_size > 0:
-            buf = BytesIO(tmp_file_cam.read_bytes())
-            buf.seek(0)
-            tmp_file_cam.unlink(missing_ok=True)
-            logger.info("Snapshot captured from cam server stream")
-            return buf
-        tmp_file_cam.unlink(missing_ok=True)
-        logger.warning(f"Cam server snapshot failed: {stderr.decode()[-100:]}, trying direct RTSPS")
+        # Read raw MJPEG stream and extract first complete JPEG frame
+        import urllib.request
+        with urllib.request.urlopen(stream_url, timeout=10) as resp:
+            raw = b""
+            while True:
+                chunk = resp.read(4096)
+                if not chunk:
+                    break
+                raw += chunk
+                # Look for JPEG start (FFD8) and end (FFD9) markers
+                start = raw.find(b"\xff\xd8")
+                if start != -1:
+                    end = raw.find(b"\xff\xd9", start + 2)
+                    if end != -1:
+                        jpeg_data = raw[start:end + 2]
+                        buf = BytesIO(jpeg_data)
+                        buf.seek(0)
+                        logger.info("Snapshot captured from cam server MJPEG stream")
+                        return buf
+                # Safety limit - don't read more than 2MB
+                if len(raw) > 2 * 1024 * 1024:
+                    break
+        logger.warning("Could not extract JPEG frame from MJPEG stream, trying direct RTSPS")
     except Exception as e:
         logger.warning(f"Cam server snapshot error: {e}, trying direct RTSPS")
 
