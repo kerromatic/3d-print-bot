@@ -233,6 +233,36 @@ async def live_page():
 </html>"""
 
 
+@app.get("/snapshot")
+async def snapshot():
+    """Return a single JPEG frame from the printer camera."""
+    from fastapi.responses import Response
+    rtsp_url = get_rtsp_url()
+    ffmpeg_path = _find_ffmpeg()
+    cmd = [
+        ffmpeg_path,
+        "-rtsp_transport", "tcp",
+        "-i", rtsp_url,
+        "-vframes", "1",
+        "-q:v", "2",
+        "-f", "image2",
+        "-vcodec", "mjpeg",
+        "pipe:1",
+    ]
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=30)
+        if stdout and len(stdout) > 100:
+            return Response(content=stdout, media_type="image/jpeg")
+    except Exception as e:
+        pass
+    return Response(status_code=503, content=b"Camera unavailable")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Redirect root to live page."""
