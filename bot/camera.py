@@ -57,59 +57,78 @@ def get_rtsp_url() -> str:
 
 
 async def capture_snapshot() -> BytesIO | None:
-    """Capture a single frame from the printer camera using ffmpeg.
-    
+    """Capture a single JPEG frame from the cam server MJPEG stream.
+
+    Reads the first complete JPEG frame from the already-running cam server
+    at localhost:8001/stream. Falls back to direct ffmpeg RTSPS if unavailable.
     Returns a BytesIO containing the JPEG image, or None on failure.
     """
-    rtsp_url = get_rtsp_url()
-    
     if not settings.PRINTER_IP or not settings.PRINTER_ACCESS_CODE:
         logger.warning("Printer IP or access code not configured")
         return None
-    
+
+    cam_port = getattr(settings, "CAM_SERVER_PORT", "8001")
+    stream_url = f"http://localhost:{cam_port}/stream"
+
     try:
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-            tmp_path = tmp.name
-        
-        # Use ffmpeg to grab a single frame from the RTSPS stream
-        ffmpeg_path = _find_ffmpeg()
-        cmd = [
-            ffmpeg_path,
-            "-rtsp_transport", "tcp",
-            "-rtsp_flags", "prefer_tcp",
-            "-allowed_media_types", "video",
-            "-i", rtsp_url,
+        # Open the MJPEG stream and read until we have one complete JPEG frame
+        proc = await asyncio.create_subprocess_exec(
+            _find_ffmpeg(),
+            "-i", stream_url,
             "-vframes", "1",
             "-q:v", "2",
-            "-y",
-            tmp_path,
-        ]
-        
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
+            "-f", "image2",
+            "-vcodec", "mjpeg",
+            "pipe:1",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        
-        _, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
-        
-        if process.returncode != 0:
-            logger.error(f"ffmpeg failed: {stderr.decode()[-200:]}")
-            return None
-        
-        # Read the captured frame
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=15)
+
+        if proc.returncode == 0 and stdout:
+            buf = BytesIO(stdout)
+            buf.seek(0)
+            logger.info("Snapshot captured from cam server stream")
+            return buf
+        else:
+            logger.warning(f"Cam server snapshot failed: {stderr.decode()[-100:]}, trying direct RTSPS")
+    except Exception as e:
+        logger.warning(f"Cam server snapshot error: {e}, trying direct RTSPS")
+
+    # Fallback: direct RTSPS connection
+    try:
+        rtsp_url = get_rtsp_url()
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            tmp_path = tmp.name
+
+        proc2 = await asyncio.create_subprocess_exec(
+            _find_ffmpeg(),
+            "-rtsp_transport", "tcp",
+            "-i", rtsp_url,
+            "-vframes", "1",
+            "-q:v", "2",
+            "-y", tmp_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr2 = await asyncio.wait_for(proc2.communicate(), timeout=30)
+
         tmp_file = Path(tmp_path)
         if tmp_file.exists() and tmp_file.stat().st_size > 0:
-            buf = BytesIO(tmp_file.read_bytes())
-            buf.seek(0)
+            buf2 = BytesIO(tmp_file.read_bytes())
+            buf2.seek(0)
             tmp_file.unlink()
-            return buf
-        
-        logger.error("Snapshot file is empty or missing")
+            logger.info("Snapshot captured via direct RTSPS fallback")
+            return buf2
+
+        logger.error(f"Direct RTSPS also failed: {stderr2.decode()[-100:]}")
         return None
-        
+
     except asyncio.TimeoutError:
-        logger.error("ffmpeg timed out capturing snapshot")
+        logger.error("Direct RTSPS snapshot timed out")
+        return None
+    except Exception as e:
+        logger.error(f"Direct RTSPS snapshot error: {e}")
         return None
     except FileNotFoundError:
         logger.error("ffmpeg not found. Install it: winget install ffmpeg")
