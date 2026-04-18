@@ -17,8 +17,53 @@ from config.settings import settings
 
 app = FastAPI(title="Guapo Prints Live Cam", docs_url=None, redoc_url=None)
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the background frame capture loop on server startup."""
+    asyncio.create_task(_frame_capture_loop())
+
 # Global cache of the most recent JPEG frame
 _last_frame: bytes = b""
+
+
+async def _frame_capture_loop():
+    """Background task: continuously capture frames from RTSPS into _last_frame."""
+    global _last_frame
+    rtsp_url = get_rtsp_url()
+    ffmpeg_path = _find_ffmpeg()
+    cmd = [
+        ffmpeg_path,
+        "-rtsp_transport", "tcp",
+        "-i", rtsp_url,
+        "-f", "mjpeg",
+        "-q:v", "3",
+        "-r", "2",
+        "-an",
+        "pipe:1",
+    ]
+    while True:
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            buf = b""
+            while True:
+                chunk = await process.stdout.read(4096)
+                if not chunk:
+                    break
+                buf += chunk
+                start = buf.find(b"\xff\xd8")
+                if start != -1:
+                    end = buf.find(b"\xff\xd9", start + 2)
+                    if end != -1:
+                        _last_frame = buf[start:end + 2]
+                        buf = buf[end + 2:]
+        except Exception:
+            pass
+        await asyncio.sleep(5)
 
 
 def get_rtsp_url() -> str:
