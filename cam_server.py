@@ -17,6 +17,9 @@ from config.settings import settings
 
 app = FastAPI(title="Guapo Prints Live Cam", docs_url=None, redoc_url=None)
 
+# Global cache of the most recent JPEG frame
+_last_frame: bytes = b""
+
 
 def get_rtsp_url() -> str:
     return f"rtsps://bblp:{settings.PRINTER_ACCESS_CODE}@{settings.PRINTER_IP}:322/streaming/live/1"
@@ -89,6 +92,8 @@ async def generate_mjpeg():
                 if start != -1 and end != -1:
                     frame = buffer[start:end + 2]
                     buffer = buffer[end + 2:]
+                    global _last_frame
+                    _last_frame = frame
                     yield (
                         b"--frame\r\n"
                         b"Content-Type: image/jpeg\r\n\r\n"
@@ -235,32 +240,17 @@ async def live_page():
 
 @app.get("/snapshot")
 async def snapshot():
-    """Return a single JPEG frame from the printer camera."""
+    """Return the most recent JPEG frame from the live stream cache."""
     from fastapi.responses import Response
-    rtsp_url = get_rtsp_url()
-    ffmpeg_path = _find_ffmpeg()
-    cmd = [
-        ffmpeg_path,
-        "-rtsp_transport", "tcp",
-        "-i", rtsp_url,
-        "-vframes", "1",
-        "-q:v", "2",
-        "-f", "image2",
-        "-vcodec", "mjpeg",
-        "pipe:1",
-    ]
-    try:
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=30)
-        if stdout and len(stdout) > 100:
-            return Response(content=stdout, media_type="image/jpeg")
-    except Exception as e:
-        pass
-    return Response(status_code=503, content=b"Camera unavailable")
+    global _last_frame
+    if _last_frame and len(_last_frame) > 100:
+        return Response(content=_last_frame, media_type="image/jpeg")
+    # No frame cached yet - stream hasn't been viewed, wait briefly
+    for _ in range(20):
+        await asyncio.sleep(0.5)
+        if _last_frame and len(_last_frame) > 100:
+            return Response(content=_last_frame, media_type="image/jpeg")
+    return Response(status_code=503, content=b"No frame available - start the live stream first")
 
 
 @app.get("/", response_class=HTMLResponse)
